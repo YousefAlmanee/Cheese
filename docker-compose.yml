@@ -1,0 +1,17 @@
+# A throwaway PostgreSQL for local development and tests: `docker compose up -d`.
+# Same address as `npm run db:local`, so .env.example and the test defaults work unchanged.
+services:
+  db:
+    image: postgres:16
+    ports:
+      - "54329:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: cheese
+      # Byte-wise ordering, which the friendship table's check relies on (it must match JavaScript).
+      POSTGRES_INITDB_ARGS: --locale=C
+    volumes:
+      - ./scripts/docker-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cheese-db:/var/lib/postgresql/data
+volumes:
+  cheese-db:

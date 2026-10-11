@@ -21,6 +21,7 @@ Next.js 16 (App Router) and TypeScript, PostgreSQL with Drizzle, Better Auth (Go
 ## Run it on your machine
 
 You need Node 22 and a PostgreSQL 14+ server. On a machine with PostgreSQL installed, `npm run db:local` starts a throwaway one.
+With Docker (any OS, including Windows), `docker compose up -d` starts the same throwaway database on the same port and also creates `cheese_test` for the tests.
 
 ```bash
 npm install
