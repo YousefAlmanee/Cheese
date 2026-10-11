@@ -17,12 +17,16 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const [isPending, startTransition] = useTransition();
   const [pull, setPull] = useState(0); // current drag distance in px (0 when idle)
   const startY = useRef<number | null>(null);
+  const startX = useRef(0);
   const armed = useRef(false);
 
   useEffect(() => {
     function onStart(e: TouchEvent) {
-      if (window.scrollY <= 0 && e.touches.length === 1) {
+      // A swipe that starts on a sideways-scrolling row belongs to that row, never to refresh.
+      const onRail = e.target instanceof Element && e.target.closest(".ch-tile-row, .ch-chips");
+      if (window.scrollY <= 0 && e.touches.length === 1 && !onRail) {
         startY.current = e.touches[0].clientY;
+        startX.current = e.touches[0].clientX;
         armed.current = true;
       } else {
         startY.current = null;
@@ -32,6 +36,14 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
     function onMove(e: TouchEvent) {
       if (!armed.current || startY.current === null || isPending) return;
       const dy = e.touches[0].clientY - startY.current;
+      const dx = e.touches[0].clientX - startX.current;
+      // Mostly sideways: give the gesture back to normal scrolling for good.
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+        armed.current = false;
+        startY.current = null;
+        setPull(0);
+        return;
+      }
       if (dy <= 0 || window.scrollY > 0) {
         setPull(0);
         return;
