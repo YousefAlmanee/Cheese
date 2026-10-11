@@ -19,6 +19,19 @@ export function isValidUsername(value: string): boolean {
   return USERNAME_RE.test(value);
 }
 
+/** The sign-in PIN is exactly four digits. It is stored as the account password (hashed). */
+export const PIN_RE = /^[0-9]{4}$/;
+
+export function isValidPin(value: string): boolean {
+  return PIN_RE.test(value);
+}
+
+/**
+ * Username sign-in has no email, but better-auth's user model requires one, so we store a
+ * stable placeholder derived from the (already lowercased) username.
+ */
+export const usernameEmail = (username: string) => `${username}@users.cheese.local`;
+
 /** Candidate handles in order of preference: the base, then base plus a short number. */
 export function* usernameCandidates(base: string, random: () => number = Math.random): Generator<string> {
   yield base;

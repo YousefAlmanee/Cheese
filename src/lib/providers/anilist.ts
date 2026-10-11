@@ -10,13 +10,17 @@ const FIELDS = `
   coverImage { large }
   episodes duration chapters
   genres
-  description(asHTML: false)
+  description(asHtml: false)
   studios(isMain: true) { nodes { name } }
   staff(perPage: 4, sort: RELEVANCE) { edges { role node { name { full } } } }
 `;
 
 const SEARCH = `query ($q: String) { Page(perPage: 8) { media(search: $q, sort: SEARCH_MATCH) { ${FIELDS} } } }`;
 const BY_ID = `query ($id: Int) { Media(id: $id) { ${FIELDS} } }`;
+const POPULAR = `query {
+  anime: Page(perPage: 8) { media(sort: TRENDING_DESC, type: ANIME) { ${FIELDS} } }
+  manga: Page(perPage: 4) { media(sort: TRENDING_DESC, type: MANGA) { ${FIELDS} } }
+}`;
 
 type Media = {
   id: number;
@@ -86,6 +90,11 @@ export const anilist: Provider = {
   async search(query, signal) {
     const data = await gql<{ Page: { media: Media[] } }>(SEARCH, { q: query }, signal);
     return data.Page.media.map(mediaDraft);
+  },
+
+  async popular(signal) {
+    const data = await gql<{ anime: { media: Media[] }; manga: { media: Media[] } }>(POPULAR, {}, signal);
+    return [...data.anime.media, ...data.manga.media].map(mediaDraft);
   },
 
   async details(ref: Ref, signal) {

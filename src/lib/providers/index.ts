@@ -57,6 +57,34 @@ export async function searchAll(query: string, only?: Category): Promise<SearchO
   return { hits: rank(interleave(lists), q), failed, unavailable };
 }
 
+// Popular titles change slowly, so cache each source's list in memory and reuse it across requests.
+const POPULAR_TTL_MS = 6 * 60 * 60 * 1000;
+const popularCache = new Map<string, { at: number; hits: ItemDraft[] }>();
+
+async function popularFor(p: Provider): Promise<ItemDraft[]> {
+  const cached = popularCache.get(p.source);
+  if (cached && Date.now() - cached.at < POPULAR_TTL_MS) return cached.hits;
+  const hits = await p.popular!(AbortSignal.timeout(TIMEOUT_MS));
+  popularCache.set(p.source, { at: Date.now(), hits });
+  return hits;
+}
+
+/** Trending / popular titles for discovery, before anyone types. Shape mirrors {@link searchAll}. */
+export async function popularAll(only?: Category): Promise<SearchOutcome> {
+  const wanted = providers.filter((p) => !only || p.categories.includes(only));
+  const unavailable = wanted.filter((p) => !p.enabled()).flatMap((p) => p.categories.filter((c) => !only || c === only));
+  const active = wanted.filter((p) => p.enabled() && typeof p.popular === "function");
+
+  const settled = await Promise.allSettled(active.map((p) => popularFor(p)));
+  const lists: ItemDraft[][] = [];
+  const failed: SearchOutcome["failed"] = [];
+  settled.forEach((r, i) => {
+    if (r.status === "fulfilled") lists.push(r.value.filter((h) => !only || h.category === only));
+    else failed.push({ provider: active[i].source, categories: active[i].categories });
+  });
+  return { hits: interleave(lists), failed, unavailable };
+}
+
 export function providerFor(source: Source, category: Category): Provider | undefined {
   if (source === "openlibrary" || source === "googlebooks") return books;
   return providers.find((p) => p.source === source && p.categories.includes(category));

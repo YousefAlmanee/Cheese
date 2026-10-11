@@ -2,10 +2,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { profile } from "@/db/schema";
 import { inviteCode, randomToken } from "./tokens";
-import { usernameBase, usernameCandidates } from "./username";
+import { isValidUsername, usernameBase, usernameCandidates } from "./username";
 
 /** Creates the profile row for a user if it does not exist yet. Safe to call repeatedly. */
-export async function ensureProfile(user: { id: string; name: string; email: string }) {
+export async function ensureProfile(user: { id: string; name: string; email: string; username?: string | null }) {
   const existing = await db.query.profile.findFirst({ where: eq(profile.userId, user.id) });
   if (existing) return existing;
 
@@ -13,7 +13,9 @@ export async function ensureProfile(user: { id: string; name: string; email: str
   const base = usernameBase(user.name?.trim() ? user.name : user.email);
   const tone = (Math.abs(hash(user.id)) % 4) + 1;
 
-  for (const username of usernameCandidates(base)) {
+  // Prefer the handle the person chose at sign-up; fall back to generated candidates if it is somehow taken.
+  const preferred = user.username && isValidUsername(user.username) ? [user.username] : [];
+  for (const username of [...preferred, ...usernameCandidates(base)]) {
     const [created] = await db
       .insert(profile)
       .values({

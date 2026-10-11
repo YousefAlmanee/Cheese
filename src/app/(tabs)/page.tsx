@@ -3,9 +3,12 @@ import { startEntry } from "@/app/actions/entry";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { LogButton } from "@/components/log-button";
+import { NotificationBell } from "@/components/notification-bell";
+import { PopularShelves } from "@/components/popular-shelves";
 import { CATEGORIES, type Category } from "@/db/schema";
 import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import { loadHome } from "@/lib/home";
+import { unreadCount } from "@/lib/notifications";
 import { percent, shortProgress } from "@/lib/progress";
 import { requireUser } from "@/lib/session";
 import { hoursLabel } from "@/lib/time";
@@ -17,6 +20,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const category = CATEGORIES.includes(sp.category as Category) ? (sp.category as Category) : undefined;
   const home = await loadHome(user.id, profile.timezone, profile.weeklyGoalMinutes, category);
+  const unread = await unreadCount(user.id);
   const { spotlight: spot, more } = home;
   const tab = (c: Category | undefined) => (c ? `/?category=${c}` : "/");
 
@@ -31,6 +35,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </b>{" "}
             this week
           </span>
+          <NotificationBell unread={unread} />
           <Link href="/settings" className="ch-av ch-av--lg" style={{ background: "var(--surface-quiet)", textDecoration: "none", marginLeft: 0, width: "var(--size-tap)", height: "var(--size-tap)", color: "var(--ink)" }} aria-label="Settings and profile">
             {(profile.displayName.trim()[0] ?? "?").toUpperCase()}
           </Link>
@@ -61,6 +66,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <Link className="ch-btn ch-btn--primary" href="/add">
               Add something
             </Link>
+          </div>
+          <div style={{ marginTop: "var(--space-4)" }}>
+            <p className="ch-overline" style={{ marginBottom: "var(--space-2)" }}>Popular right now</p>
+            <PopularShelves category={category} />
           </div>
         </section>
       ) : (

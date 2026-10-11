@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { entry, friendGroup, friendship, groupMember, item, profile } from "@/db/schema";
+import { notify } from "./notifications";
 import { isValidUsername } from "./username";
 
 export type Person = { userId: string; username: string; displayName: string; avatarTone: number };
@@ -37,15 +38,20 @@ export async function sendFriendRequest(userId: string, usernameInput: string): 
   if (!target) return { ok: false, error: "No one has that username." };
   if (target.userId === userId) return { ok: false, error: "That is you." };
 
+  const me = await personById(userId);
+  const myName = me?.displayName ?? "Someone";
+
   const existing = await pairRow(userId, target.userId);
   if (existing?.status === "accepted") return { ok: false, error: `You and ${target.displayName} are already friends.` };
   if (existing && existing.requestedBy === userId) return { ok: false, error: `You already asked ${target.displayName}. They need to accept.` };
   if (existing) {
     await db.update(friendship).set({ status: "accepted" }).where(eq(friendship.id, existing.id));
+    await notify({ userId: target.userId, type: "friend_accepted", title: `${myName} accepted your friend request`, url: "/friends/people" });
     return { ok: true, message: `You and ${target.displayName} are now friends.`, person: target };
   }
   const { low, high } = orderPair(userId, target.userId);
   await db.insert(friendship).values({ userLow: low, userHigh: high, requestedBy: userId });
+  await notify({ userId: target.userId, type: "friend_request", title: `${myName} sent you a friend request`, url: "/friends/people" });
   return { ok: true, message: `Asked ${target.displayName}. They will see it next time they open Cheese.`, person: target };
 }
 
@@ -53,8 +59,13 @@ export async function respondToRequest(userId: string, otherId: string, accept: 
   const row = await pairRow(userId, otherId);
   // Only the person who was asked can answer.
   if (!row || row.status !== "pending" || row.requestedBy === userId) return false;
-  if (accept) await db.update(friendship).set({ status: "accepted" }).where(eq(friendship.id, row.id));
-  else await db.delete(friendship).where(eq(friendship.id, row.id));
+  if (accept) {
+    await db.update(friendship).set({ status: "accepted" }).where(eq(friendship.id, row.id));
+    const me = await personById(userId);
+    await notify({ userId: otherId, type: "friend_accepted", title: `${me?.displayName ?? "Someone"} accepted your friend request`, url: "/friends/people" });
+  } else {
+    await db.delete(friendship).where(eq(friendship.id, row.id));
+  }
   return true;
 }
 
@@ -80,6 +91,8 @@ export async function acceptInvite(userId: string, code: string): Promise<Result
     const { low, high } = orderPair(userId, owner.userId);
     await db.insert(friendship).values({ userLow: low, userHigh: high, requestedBy: owner.userId, status: "accepted" });
   }
+  const me = await personById(userId);
+  await notify({ userId: owner.userId, type: "friend_joined", title: `${me?.displayName ?? "Someone"} joined you on Cheese`, url: "/friends/people" });
   return { ok: true, message: `You and ${owner.displayName} are now friends.`, person: owner };
 }
 

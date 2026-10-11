@@ -3,10 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { RSVPS } from "@/db/schema";
+import { db } from "@/db";
+import { groupMember, item, night, RSVPS } from "@/db/schema";
 import { parseLocal } from "@/lib/freetime";
 import { cancelNight, createNight, joinAsGuest, lockIn, markNightDone, nightByToken, reopenVoting, setRsvp, toggleVote } from "@/lib/nights";
+import { notify, notifyMany } from "@/lib/notifications";
 import { currentUser, requireUser } from "@/lib/session";
 
 type Form = { error?: string };
@@ -36,6 +39,13 @@ export async function proposeNight(_prev: Form | undefined, formData: FormData):
   }
   const res = await createNight(user.id, { groupId: parsed.data.groupId, itemId: parsed.data.itemId, options, units: parsed.data.units ?? null, note: parsed.data.note });
   if (!res.ok) return { error: res.error };
+
+  // Let everyone else in the group know a night was proposed, so they can vote.
+  const [it] = await db.select({ title: item.title }).from(item).where(eq(item.id, parsed.data.itemId));
+  const members = await db.select({ userId: groupMember.userId }).from(groupMember).where(eq(groupMember.groupId, parsed.data.groupId));
+  const others = members.map((m) => m.userId).filter((uid) => uid !== user.id);
+  await notifyMany(others, { type: "night_invite", title: `${profile.displayName} suggested a movie night`, body: it?.title ?? null, url: `/night/${res.id}` });
+
   revalidatePath("/friends");
   redirect(`/night/${res.id}`);
 }
@@ -48,8 +58,18 @@ function refresh(nightId: string) {
 }
 
 export async function vote(nightId: string, optionId: string) {
-  const { user } = await requireUser();
-  if (uuid.safeParse(nightId).success && uuid.safeParse(optionId).success) await toggleVote({ nightId, userId: user.id }, optionId);
+  const { user, profile } = await requireUser();
+  if (uuid.safeParse(nightId).success && uuid.safeParse(optionId).success) {
+    const res = await toggleVote({ nightId, userId: user.id }, optionId);
+    // Tell the host when a new vote lands (not when a vote is removed, and not for the host's own vote).
+    if (res.ok && res.voted) {
+      const [n] = await db.select({ hostId: night.hostId, itemId: night.itemId }).from(night).where(eq(night.id, nightId));
+      if (n && n.hostId !== user.id) {
+        const [it] = await db.select({ title: item.title }).from(item).where(eq(item.id, n.itemId));
+        await notify({ userId: n.hostId, type: "night_vote", title: `${profile.displayName} voted on your night`, body: it?.title ?? null, url: `/night/${nightId}` });
+      }
+    }
+  }
   refresh(nightId);
 }
 

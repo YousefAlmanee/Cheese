@@ -317,3 +317,20 @@ export const pushSubscription = pgTable(
   },
   (t) => [index("push_subscription_user_idx").on(t.userId)],
 );
+
+/* ---------- Notifications ---------- */
+
+export const notification = pgTable(
+  "notification",
+  {
+    id: id(),
+    userId: userRef("user_id"),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body"),
+    url: text("url"),
+    readAt: tz("read_at"),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("notification_user_idx").on(t.userId, t.createdAt)],
+);

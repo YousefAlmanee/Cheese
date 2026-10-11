@@ -25,6 +25,8 @@ export interface Provider {
   /** False when the API key for this provider is not configured. */
   enabled(): boolean;
   search(query: string, signal: AbortSignal): Promise<ItemDraft[]>;
+  /** Trending / popular titles for discovery, shown before anyone types. Optional per source. */
+  popular?(signal: AbortSignal): Promise<ItemDraft[]>;
   /** Fetches the full record (length included) for one search hit. */
   details(ref: Ref, signal: AbortSignal): Promise<ItemDraft>;
 }

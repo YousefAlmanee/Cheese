@@ -34,6 +34,7 @@ const paths: Record<string, React.ReactNode> = {
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   x: <path d="M6 6l12 12M18 6L6 18" />,
   bookmark: <path d="M6 3h12v18l-6-4-6 4z" />,
+  bell: <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M9.5 20a2.5 2.5 0 0 0 5 0" />,
   back: <path d="M15 5l-7 7 7 7" />,
   share: <path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />,
   minus: <path d="M5 12h14" />,

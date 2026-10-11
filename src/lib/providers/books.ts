@@ -197,6 +197,12 @@ export const books: Provider = {
     return mergeBookHits(ol.status === "fulfilled" ? ol.value : [], gb.status === "fulfilled" ? gb.value : []);
   },
 
+  async popular(signal) {
+    const fields = "key,title,author_name,first_publish_year,cover_i,number_of_pages_median,subject";
+    const data = await fetchJson<{ works?: OlDoc[] }>("Open Library", `${OL}/trending/weekly.json?limit=14&fields=${fields}`, {}, signal);
+    return (data.works ?? []).filter((d) => d.key?.startsWith("/works/") && d.cover_i).map(olDraft);
+  },
+
   async details(ref, signal) {
     return ref.source === "googlebooks" ? googlebooks.details(ref, signal) : openlibrary.details(ref, signal);
   },
