@@ -9,8 +9,13 @@ export default async () => {
     console.log("reminders: URL or CRON_SECRET is missing, skipping");
     return;
   }
-  const res = await fetch(`${base}/api/cron/reminders`, { headers: { Authorization: `Bearer ${secret}` } });
-  console.log("reminders:", res.status, await res.text());
+  // Scheduled functions are cut off after about 30 seconds, so give up a little before that and log why.
+  try {
+    const res = await fetch(`${base}/api/cron/reminders`, { headers: { Authorization: `Bearer ${secret}` }, signal: AbortSignal.timeout(25_000) });
+    console.log("reminders:", res.status, await res.text());
+  } catch (e) {
+    console.error("reminders: request failed", e instanceof Error ? e.message : e);
+  }
 };
 
 export const config: Config = { schedule: "*/5 * * * *" };
