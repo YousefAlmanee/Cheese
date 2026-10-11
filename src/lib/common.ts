@@ -34,24 +34,31 @@ export async function loadGroupView(viewerId: string, groupId: string, filters: 
   const byId = new Map(group.members.map((m) => [m.userId, m]));
   const order = new Map(ids.map((id, i) => [id, i]));
 
-  const [wantRows, ratedRows, mineRows] = await Promise.all([
+  // Only the few columns the match needs. The full item rows and the viewer's own entries are read afterwards,
+  // and only for the items that more than one person wants.
+  const [wantRows, ratedRows] = await Promise.all([
     db
-      .select({ e: entry, i: item })
+      .select({ userId: entry.userId, itemId: entry.itemId, priority: entry.priority, platform: entry.platform, ratingHalf: entry.ratingHalf })
       .from(entry)
-      .innerJoin(item, eq(entry.itemId, item.id))
       .where(and(inArray(entry.userId, ids), eq(entry.together, true), eq(entry.hidden, false), WANTING)),
     db
       .select({ userId: entry.userId, itemId: entry.itemId, ratingHalf: entry.ratingHalf })
       .from(entry)
       .where(and(inArray(entry.userId, ids), eq(entry.hidden, false), sql`${entry.ratingHalf} is not null`)),
-    db.select().from(entry).where(eq(entry.userId, viewerId)),
   ]);
 
-  const lists = buildLists(ids, wantRows.map(({ e }) => e), ratedRows);
+  const lists = buildLists(ids, wantRows, ratedRows);
   const match = groupMatch([...lists.values()].map((m) => [...m.values()]));
 
-  const itemById = new Map(wantRows.map(({ i }) => [i.id, i]));
-  const common = commonItems(wantRows.map(({ e }) => ({ userId: e.userId, itemId: e.itemId, priority: e.priority, platform: e.platform })));
+  const common = commonItems(wantRows);
+  const commonIds = common.map((c) => c.itemId);
+  const [commonItemRows, mineRows] = commonIds.length
+    ? await Promise.all([
+        db.select().from(item).where(inArray(item.id, commonIds)),
+        db.select().from(entry).where(and(eq(entry.userId, viewerId), inArray(entry.itemId, commonIds))),
+      ])
+    : [[], []];
+  const itemById = new Map(commonItemRows.map((i) => [i.id, i]));
   const mineByItem = new Map(mineRows.map((e) => [e.itemId, e]));
 
   let rows: CommonRow[] = common.map((c) => {
