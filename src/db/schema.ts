@@ -146,7 +146,7 @@ export const progressLog = pgTable(
     // Minutes this tap is worth. Negative when someone undoes a tap.
     minutes: integer("minutes").notNull(),
   },
-  (t) => [index("progress_log_user_at_idx").on(t.userId, t.at)],
+  (t) => [index("progress_log_user_at_idx").on(t.userId, t.at), index("progress_log_entry_idx").on(t.entryId)],
 );
 
 /* ---------- Free time and sessions ---------- */
@@ -204,6 +204,8 @@ export const planSession = pgTable(
   (t) => [
     index("plan_session_user_start_idx").on(t.userId, t.startsAt),
     index("plan_session_night_idx").on(t.nightId),
+    // The reminder job runs every few minutes and filters on exactly this; keeps it from scanning every session.
+    index("plan_session_due_idx").on(t.startsAt).where(sql`${t.done} = false and ${t.remindedAt} is null`),
     check("plan_session_duration", sql`${t.durationMin} > 0`),
   ],
 );
@@ -228,12 +230,16 @@ export const friendship = pgTable(
   ],
 );
 
-export const friendGroup = pgTable("friend_group", {
-  id: id(),
-  name: text("name").notNull(),
-  ownerId: userRef("owner_id"),
-  createdAt: tz("created_at").notNull().defaultNow(),
-});
+export const friendGroup = pgTable(
+  "friend_group",
+  {
+    id: id(),
+    name: text("name").notNull(),
+    ownerId: userRef("owner_id"),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("friend_group_owner_idx").on(t.ownerId)],
+);
 
 export const groupMember = pgTable(
   "group_member",
@@ -262,7 +268,7 @@ export const night = pgTable(
     note: text("note"),
     createdAt: tz("created_at").notNull().defaultNow(),
   },
-  (t) => [index("night_group_idx").on(t.groupId)],
+  (t) => [index("night_group_idx").on(t.groupId), index("night_host_idx").on(t.hostId), index("night_item_idx").on(t.itemId)],
 );
 
 export const nightOption = pgTable(
@@ -300,7 +306,8 @@ export const nightVote = pgTable(
     optionId: uuid("option_id").notNull().references(() => nightOption.id, { onDelete: "cascade" }),
     participantId: uuid("participant_id").notNull().references(() => nightParticipant.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.optionId, t.participantId] })],
+  // The primary key serves lookups by option; this one serves removing a participant's votes.
+  (t) => [primaryKey({ columns: [t.optionId, t.participantId] }), index("night_vote_participant_idx").on(t.participantId)],
 );
 
 /* ---------- Reminders ---------- */
