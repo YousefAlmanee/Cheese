@@ -34,6 +34,9 @@ describe("safeNext", () => {
     expect(safeNext("https://evil.example")).toBe("/");
     expect(safeNext("//evil.example")).toBe("/");
     expect(safeNext("/\\evil.example")).toBe("/");
+    expect(safeNext("/\t/evil.example")).toBe("/"); // browsers strip the tab, leaving //evil.example
+    expect(safeNext("/\n/evil.example")).toBe("/");
+    expect(safeNext("/ok\\..\\evil")).toBe("/");
     expect(safeNext(undefined)).toBe("/");
   });
 });
