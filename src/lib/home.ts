@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { entry, item, planSession, type Category } from "@/db/schema";
 import { minutesBetween } from "./entries";
@@ -60,7 +60,8 @@ export async function loadHome(userId: string, zone: string, goalMinutes: number
     db
       .select({ s: planSession })
       .from(planSession)
-      .where(and(eq(planSession.userId, userId), eq(planSession.done, false), gte(planSession.startsAt, new Date(now.getTime() - 30 * 60_000))))
+      // Only sessions for a library item can be the spotlight, so a free-text one ("Board games") must not hide the next one that is.
+      .where(and(eq(planSession.userId, userId), eq(planSession.done, false), isNotNull(planSession.itemId), gte(planSession.startsAt, new Date(now.getTime() - 30 * 60_000))))
       .orderBy(asc(planSession.startsAt))
       .limit(1),
   ]);
