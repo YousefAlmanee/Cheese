@@ -4,6 +4,7 @@ import { tmdb } from "@/lib/providers/tmdb";
 import { anilist } from "@/lib/providers/anilist";
 import { books, mergeBookHits } from "@/lib/providers/books";
 import { igdb, resetIgdbToken } from "@/lib/providers/igdb";
+import { fetchJson, resetProviderCache } from "@/lib/providers/http";
 import type { ItemDraft } from "@/lib/providers/types";
 import { formatMinutes, remainingMinutes, totalMinutes } from "@/lib/length";
 
@@ -40,6 +41,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   resetIgdbToken();
+  resetProviderCache();
 });
 
 describe("TMDB", () => {
@@ -375,5 +377,51 @@ describe("length helpers", () => {
     expect(formatMinutes(45)).toBe("45m");
     expect(formatMinutes(120)).toBe("2h");
     expect(formatMinutes(169)).toBe("2h 49m");
+  });
+});
+
+describe("fetchJson", () => {
+  const ok = () => new Response(JSON.stringify({ n: 1 }), { status: 200 });
+
+  it("reuses an answer it already has, but not when asked not to", async () => {
+    mockFetch({ "example.test/a": ok });
+    await fetchJson("X", "https://example.test/a", {}, signal());
+    await fetchJson("X", "https://example.test/a", {}, signal());
+    expect(calls).toHaveLength(1);
+    await fetchJson("X", "https://example.test/a", {}, signal(), { cacheMs: 0 });
+    expect(calls).toHaveLength(2);
+  });
+
+  it("keeps different POST bodies apart", async () => {
+    mockFetch({ "example.test/q": ok });
+    await fetchJson("X", "https://example.test/q", { method: "POST", body: "one" }, signal());
+    await fetchJson("X", "https://example.test/q", { method: "POST", body: "two" }, signal());
+    expect(calls).toHaveLength(2);
+  });
+
+  it("retries a 503 once and returns the second answer", async () => {
+    let n = 0;
+    mockFetch({ "example.test/b": () => (++n === 1 ? new Response("x", { status: 503 }) : ok()) });
+    expect(await fetchJson("X", "https://example.test/b", {}, signal())).toEqual({ n: 1 });
+    expect(calls).toHaveLength(2);
+  });
+
+  it("gives up after one retry, does not cache the failure, and does not retry a 404", async () => {
+    mockFetch({ "example.test/c": () => new Response("x", { status: 500 }) });
+    await expect(fetchJson("X", "https://example.test/c", {}, signal())).rejects.toThrow(/HTTP 500/);
+    expect(calls).toHaveLength(2);
+    await expect(fetchJson("X", "https://example.test/c", {}, signal())).rejects.toThrow(/HTTP 500/);
+    expect(calls).toHaveLength(4);
+    mockFetch({});
+    await expect(fetchJson("X", "https://example.test/missing", {}, signal())).rejects.toThrow(/HTTP 404/);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("does not retry once the caller has given up", async () => {
+    const c = new AbortController();
+    mockFetch({ "example.test/d": () => new Response("x", { status: 503 }) });
+    c.abort();
+    await expect(fetchJson("X", "https://example.test/d", {}, c.signal)).rejects.toThrow();
+    expect(calls.length).toBeLessThanOrEqual(1);
   });
 });

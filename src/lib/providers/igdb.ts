@@ -11,7 +11,7 @@ async function token(signal: AbortSignal): Promise<string> {
   const id = process.env.TWITCH_CLIENT_ID ?? "";
   const secret = process.env.TWITCH_CLIENT_SECRET ?? "";
   const url = `${TOKEN_URL}?client_id=${encodeURIComponent(id)}&client_secret=${encodeURIComponent(secret)}&grant_type=client_credentials`;
-  const res = await fetchJson<{ access_token: string; expires_in: number }>("IGDB", url, { method: "POST" }, signal);
+  const res = await fetchJson<{ access_token: string; expires_in: number }>("IGDB", url, { method: "POST" }, signal, { cacheMs: 0 });
   cached = { token: res.access_token, expiresAt: Date.now() + res.expires_in * 1000 };
   return cached.token;
 }
