@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:local": "bash scripts/local-db.sh",
     "dev:mock": "cross-env TMDB_API_KEY=mock TWITCH_CLIENT_ID=mock TWITCH_CLIENT_SECRET=mock NODE_OPTIONS=\"--import ./scripts/mock-apis.mjs\" next dev",
     "test:e2e": "playwright test",

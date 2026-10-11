@@ -26,9 +26,11 @@ You need Node 22 and a PostgreSQL 14+ server. On a machine with PostgreSQL insta
 npm install
 cp .env.example .env.local          # then edit it, see SETUP.md for each value
 npm run db:local                    # optional: start a local PostgreSQL on port 54329
-DATABASE_URL=postgres://postgres@127.0.0.1:54329/cheese npm run db:migrate
+npm run db:migrate                  # reads DATABASE_URL from .env.local
 npm run dev                         # http://localhost:3000
 ```
+
+On Windows use `copy .env.example .env.local` in Command Prompt (or `cp` in Git Bash). `db:local` is a bash script for Linux; elsewhere start any PostgreSQL 14+ yourself and put its address in `DATABASE_URL`.
 
 With `ENABLE_DEV_LOGIN=1` in `.env.local`, the sign-in page also offers email and password so you can try the app without setting up Google. That option is switched off in production builds, whatever the setting.
 
