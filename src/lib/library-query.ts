@@ -37,9 +37,12 @@ export function parseFilter(sp: Record<string, string | string[] | undefined>): 
   };
 }
 
+/** How many items the Library shows at first, and how many more each "Show more" adds. */
+export const PAGE_SIZE = 60;
+
 export type LibraryRow = { entry: typeof entry.$inferSelect; item: typeof item.$inferSelect };
 
-export async function listLibrary(userId: string, f: LibraryFilter): Promise<LibraryRow[]> {
+export async function listLibrary(userId: string, f: LibraryFilter, limit = PAGE_SIZE): Promise<{ rows: LibraryRow[]; total: number }> {
   const where = and(
     eq(entry.userId, userId),
     f.status ? eq(entry.status, f.status) : undefined,
@@ -50,19 +53,17 @@ export async function listLibrary(userId: string, f: LibraryFilter): Promise<Lib
   );
   const rows = await db.select({ entry, item }).from(entry).innerJoin(item, eq(entry.itemId, item.id)).where(where).orderBy(desc(entry.updatedAt));
   const len = (r: LibraryRow) => totalMinutes(r.item, r.entry.totalOverride) ?? Number.MAX_SAFE_INTEGER;
+  // Length is worked out in code, so the order is applied here and the page is cut afterwards.
   if (f.status === "done" && f.sort === "recent") {
-    return rows.sort((a, b) => (b.entry.finishedAt?.getTime() ?? 0) - (a.entry.finishedAt?.getTime() ?? 0));
+    rows.sort((a, b) => (b.entry.finishedAt?.getTime() ?? 0) - (a.entry.finishedAt?.getTime() ?? 0));
+  } else if (f.sort === "priority") {
+    rows.sort((a, b) => Number(b.entry.priority === "must") - Number(a.entry.priority === "must"));
+  } else if (f.sort === "shortest") {
+    rows.sort((a, b) => len(a) - len(b));
+  } else if (f.sort === "longest") {
+    rows.sort((a, b) => (len(b) === Number.MAX_SAFE_INTEGER ? -1 : len(a) === Number.MAX_SAFE_INTEGER ? 1 : len(b) - len(a)));
   }
-  switch (f.sort) {
-    case "priority":
-      return rows.sort((a, b) => Number(b.entry.priority === "must") - Number(a.entry.priority === "must"));
-    case "shortest":
-      return rows.sort((a, b) => len(a) - len(b));
-    case "longest":
-      return rows.sort((a, b) => (len(b) === Number.MAX_SAFE_INTEGER ? -1 : len(a) === Number.MAX_SAFE_INTEGER ? 1 : len(b) - len(a)));
-    default:
-      return rows;
-  }
+  return { rows: rows.slice(0, Math.max(1, limit)), total: rows.length };
 }
 
 /** Genres present in this person's library, most common first. Used for the genre filter. */

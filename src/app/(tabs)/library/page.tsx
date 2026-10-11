@@ -5,7 +5,7 @@ import { STATUS_LABEL } from "@/components/badges";
 import { CATEGORIES, STATUSES, type Category, type Status } from "@/db/schema";
 import { percent, shortProgress } from "@/lib/progress";
 import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
-import { libraryGenres, listLibrary, parseFilter, SORT_LABEL, SORTS, statusCounts, type LibraryFilter } from "@/lib/library-query";
+import { libraryGenres, listLibrary, PAGE_SIZE, parseFilter, SORT_LABEL, SORTS, statusCounts, type LibraryFilter } from "@/lib/library-query";
 import { requireUser } from "@/lib/session";
 import { shortDate } from "@/lib/time";
 
@@ -33,8 +33,10 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const f = parseFilter(sp);
   const showSearch = sp.search === "1" || Boolean(f.q);
-  const [rows, counts, genres] = await Promise.all([listLibrary(user.id, f), statusCounts(user.id), libraryGenres(user.id)]);
+  const shown = Math.min(Math.max(Number(Array.isArray(sp.n) ? sp.n[0] : sp.n) || PAGE_SIZE, PAGE_SIZE), 1000);
+  const [{ rows, total }, counts, genres] = await Promise.all([listLibrary(user.id, f, shown), statusCounts(user.id), libraryGenres(user.id)]);
 
+  const moreHref = href(f, {}).includes("?") ? `${href(f, {})}&` : `${href(f, {})}?`;
   const heading = f.status ? STATUS_LABEL[f.status] : "Everything";
 
   return (
@@ -167,6 +169,11 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
               );
             })}
           </div>
+        )}
+        {total > rows.length && (
+          <Link className="ch-btn ch-btn--ghost ch-btn--block" href={`${moreHref}n=${rows.length + PAGE_SIZE}`} scroll={false}>
+            Show more ({total - rows.length} left)
+          </Link>
         )}
       </section>
     </>

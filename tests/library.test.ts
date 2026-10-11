@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { entry, item } from "@/db/schema";
+import { listLibrary } from "@/lib/library-query";
 import { addEntry, addFromRef, addManual, libraryStatuses, manualDraft, upsertItem } from "@/lib/library";
 import type { ItemDraft } from "@/lib/providers/types";
 import { makeUser, resetDb } from "./helpers";
@@ -136,5 +137,20 @@ describe("addManual and libraryStatuses", () => {
     const map = await libraryStatuses(me.id, [dune, { ...dune, externalId: "movie/2" }, { ...dune, externalId: "movie/3" }]);
     expect(Object.keys(map)).toEqual(["tmdb:movie/438631"]);
     expect(map["tmdb:movie/438631"]).toEqual({ entryId: e.id, status: "want" });
+  });
+});
+
+describe("listLibrary", () => {
+  it("returns one page and the full count, in the chosen order", async () => {
+    const me = await makeUser("Yousef");
+    for (let i = 0; i < 5; i++) {
+      const it = await upsertItem(manualDraft({ category: "movie", title: `Film ${i}` }), me.id);
+      await addEntry(me.id, it.id);
+    }
+    const f = { sort: "recent" as const, mustOnly: false };
+    const first = await listLibrary(me.id, f, 2);
+    expect(first.total).toBe(5);
+    expect(first.rows).toHaveLength(2);
+    expect((await listLibrary(me.id, f, 60)).rows).toHaveLength(5);
   });
 });
