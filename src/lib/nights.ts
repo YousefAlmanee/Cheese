@@ -183,12 +183,11 @@ export async function toggleVote(via: VoteVia, optionId: string): Promise<Ok<{ v
   }
 
   const mine = and(eq(nightVote.optionId, optionId), eq(nightVote.participantId, participant.id));
-  const existing = await db.query.nightVote.findFirst({ where: mine });
-  if (existing) {
-    await db.delete(nightVote).where(mine);
-    return { ok: true, voted: false };
-  }
-  await db.insert(nightVote).values({ optionId, participantId: participant.id });
+  // Delete first and insert only if there was nothing to delete. A double tap would otherwise both see
+  // "no vote yet" and the second insert would hit the primary key.
+  const removed = await db.delete(nightVote).where(mine).returning({ id: nightVote.optionId });
+  if (removed.length) return { ok: true, voted: false };
+  await db.insert(nightVote).values({ optionId, participantId: participant.id }).onConflictDoNothing();
   return { ok: true, voted: true };
 }
 

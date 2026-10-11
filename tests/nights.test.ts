@@ -95,6 +95,15 @@ describe("voting", () => {
     expect((await nightForMember(b.id, nightId))!.options[1].count).toBe(1);
   });
 
+  it("a double tap does not fail", async () => {
+    const { b, nightId } = await newNight();
+    const opt = (await nightForMember(b.id, nightId))!.options[1].id;
+    for (let i = 0; i < 5; i++) {
+      const results = await Promise.all([toggleVote({ nightId, userId: b.id }, opt), toggleVote({ nightId, userId: b.id }, opt)]);
+      expect(results.every((r) => r.ok)).toBe(true);
+    }
+  });
+
   it("a non-member cannot vote as a member, but a signed-in person with the shared link can", async () => {
     const { nightId } = await newNight();
     const outsider = await makeUser("Outsider");
