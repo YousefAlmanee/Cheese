@@ -95,6 +95,15 @@ describe("sendDueReminders", () => {
     expect(sent).toHaveLength(1);
   });
 
+  it("lets the push service hold the message only until the session starts", async () => {
+    const u = await subscribed("Yousef");
+    await session(u.id, min(25));
+    await session(u.id, min(-3));
+    await sendDueReminders(NOW);
+    const ttls = sent.map((x) => (x.options as { TTL: number }).TTL).sort((a, b) => a - b);
+    expect(ttls).toEqual([60, 25 * 60]); // never below a minute, even for a session that just started
+  });
+
   it("waits until the session is inside the person's lead time", async () => {
     const u = await subscribed("Yousef");
     await session(u.id, min(50)); // default lead is 30 minutes

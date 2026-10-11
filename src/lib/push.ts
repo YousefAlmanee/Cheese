@@ -31,8 +31,11 @@ export async function subscriptionCount(userId: string): Promise<number> {
   return (await db.select({ id: pushSubscription.id }).from(pushSubscription).where(eq(pushSubscription.userId, userId))).length;
 }
 
-/** Sends to every device the person has turned reminders on for. Devices that are gone are forgotten. */
-export async function sendToUser(userId: string, payload: PushPayload): Promise<{ sent: number; removed: number }> {
+/**
+ * Sends to every device the person has turned reminders on for. Devices that are gone are forgotten.
+ * `ttlSec` is how long the push service may hold the message for a device that is offline (default one hour).
+ */
+export async function sendToUser(userId: string, payload: PushPayload, ttlSec = 60 * 60): Promise<{ sent: number; removed: number }> {
   if (!pushConfigured()) return { sent: 0, removed: 0 };
   configure();
   const subs = await db.select().from(pushSubscription).where(eq(pushSubscription.userId, userId));
@@ -41,7 +44,7 @@ export async function sendToUser(userId: string, payload: PushPayload): Promise<
   await Promise.all(
     subs.map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: 60 * 60 });
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: ttlSec });
         sent++;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;

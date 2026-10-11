@@ -37,12 +37,18 @@ export async function sendDueReminders(now = new Date()): Promise<{ due: number;
     const [claimed] = await db.update(planSession).set({ remindedAt: now }).where(and(eq(planSession.id, s.id), sql`${planSession.remindedAt} is null`)).returning();
     if (!claimed) continue; // another run took it
     const mins = Math.max(0, Math.round((s.startsAt.getTime() - now.getTime()) / 60_000));
-    const res = await sendToUser(s.userId, {
-      title: s.title,
-      body: `${mins <= 1 ? "Starting now" : `Starts in ${formatMinutes(mins)}`} · ${timeLabel(s.startsAt, zone)} · ${formatMinutes(s.durationMin)}`,
-      url: `/plan/session/${s.id}`,
-      tag: s.id,
-    });
+    // A reminder is worthless once the session has started, so an offline phone should not get it an hour late.
+    const ttlSec = Math.min(60 * 60, Math.max(60, Math.round((s.startsAt.getTime() - now.getTime()) / 1000)));
+    const res = await sendToUser(
+      s.userId,
+      {
+        title: s.title,
+        body: `${mins <= 1 ? "Starting now" : `Starts in ${formatMinutes(mins)}`} · ${timeLabel(s.startsAt, zone)} · ${formatMinutes(s.durationMin)}`,
+        url: `/plan/session/${s.id}`,
+        tag: s.id,
+      },
+      ttlSec,
+    );
     if (res.sent > 0) sent++;
     else await db.update(planSession).set({ remindedAt: null }).where(eq(planSession.id, s.id));
   }
