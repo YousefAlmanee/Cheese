@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
@@ -9,17 +11,37 @@ import { TimeOption } from "@/components/time-option";
 import { RSVPS } from "@/db/schema";
 import { formatMinutes } from "@/lib/length";
 import { nightByToken, participantOf } from "@/lib/nights";
+import { appOrigin } from "@/lib/origin";
 import { currentUser } from "@/lib/session";
 import { GuestForm } from "./guest-form";
 
-export const metadata = { title: "Vote on a time", robots: { index: false, follow: false }, referrer: "no-referrer" as const };
+// Looked up once per request, since both the page and its metadata need it.
+const loadNight = cache(nightByToken);
+
+/** The title and image chat apps show when this link is pasted, e.g. into WhatsApp. */
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const v = await loadNight(token);
+  const base = { robots: { index: false, follow: false }, referrer: "no-referrer" as const };
+  if (!v) return { title: "Vote on a time", ...base };
+  const title = `${v.host.name} is planning a night: ${v.item.title}`;
+  const description = v.night.status === "voting" ? "Pick the times that work for you. No account needed." : "See when it is happening.";
+  return {
+    metadataBase: new URL(await appOrigin()),
+    title: "Vote on a time",
+    description,
+    ...base,
+    openGraph: { title, description, siteName: "Cheese", type: "website", images: v.item.coverUrl ? [{ url: v.item.coverUrl }] : undefined },
+    twitter: { card: "summary", title, description },
+  };
+}
 
 const RSVP_LABEL = { going: "Going", maybe: "Maybe", cant: "Can't" } as const;
 
 /** What friends see when they open the link from WhatsApp. Works with just a name, no account. */
 export default async function PublicNightPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const v = await nightByToken(token);
+  const v = await loadNight(token);
   if (!v) notFound();
 
   const me = await currentUser();

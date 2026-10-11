@@ -143,6 +143,8 @@ test("a guest votes from the shared link, in their own timezone, with just a nam
   const guest = await ctx.newPage();
   await guest.goto(`/n/${n.publicToken}`);
   await expect(guest.getByRole("heading", { name: "Yousef is planning a night" })).toBeVisible();
+  // What WhatsApp and similar apps read when the link is pasted.
+  await expect(guest.locator('meta[property="og:title"]')).toHaveAttribute("content", "Yousef is planning a night: Interstellar");
   await expect(guest.getByText("Add your name to vote on a time.")).toBeVisible();
   // 21:00 in Riyadh (UTC+3) is 14:00 in New York (UTC-4 in October).
   await expect(guest.locator(".ch-time").first()).toContainText("2:00 pm");
