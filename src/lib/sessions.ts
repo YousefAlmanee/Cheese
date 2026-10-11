@@ -73,15 +73,21 @@ export async function completeSession(userId: string, id: string) {
   const [claimed] = await db.update(planSession).set({ done: true }).where(and(eq(planSession.id, id), eq(planSession.done, false))).returning();
   if (!claimed) return { session: s, entryId: null as string | null, finishedNow: false };
 
-  const own = s.itemId ? await db.query.entry.findFirst({ where: and(eq(entry.userId, userId), eq(entry.itemId, s.itemId)) }) : null;
-  let finishedNow = false;
-  if (own && s.units) {
-    const res = await changeProgress(userId, own.id, { add: s.units });
-    finishedNow = res?.finishedNow ?? false;
-  } else {
-    await db.insert(progressLog).values({ userId, entryId: own?.id ?? null, deltaUnits: 0, minutes: s.durationMin });
+  // If applying the progress fails, give the session back so tapping again retries instead of silently losing it.
+  try {
+    const own = s.itemId ? await db.query.entry.findFirst({ where: and(eq(entry.userId, userId), eq(entry.itemId, s.itemId)) }) : null;
+    let finishedNow = false;
+    if (own && s.units) {
+      const res = await changeProgress(userId, own.id, { add: s.units });
+      finishedNow = res?.finishedNow ?? false;
+    } else {
+      await db.insert(progressLog).values({ userId, entryId: own?.id ?? null, deltaUnits: 0, minutes: s.durationMin });
+    }
+    return { session: claimed, entryId: own?.id ?? null, finishedNow };
+  } catch (e) {
+    await db.update(planSession).set({ done: false }).where(eq(planSession.id, id));
+    throw e;
   }
-  return { session: claimed, entryId: own?.id ?? null, finishedNow };
 }
 
 export async function removeSession(userId: string, id: string) {
