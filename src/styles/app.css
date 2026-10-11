@@ -94,3 +94,10 @@ input:focus-visible + .adjust-opt { outline: 2px solid var(--focus); outline-off
 .ch-day[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .ch-day[aria-current="page"] b { color: var(--bg); }
 .ch-day[data-today="true"]:not([aria-current="page"]) { border-color: var(--border-control); }
+
+/* Loading placeholders: flat blocks that fade in and out, still when motion is reduced */
+.skel { display: block; height: 20px; border-radius: var(--radius-md); background: var(--surface-quiet); animation: skel-pulse 1.4s ease-in-out infinite; }
+.skel--title { width: 40%; height: 28px; }
+.skel--card { height: 72px; border-radius: var(--radius-lg); }
+@keyframes skel-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
