@@ -68,14 +68,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               Add something
             </Link>
           </div>
-          <div style={{ marginTop: "var(--space-4)" }}>
-            <p className="ch-overline" style={{ marginBottom: "var(--space-2)" }}>Popular right now</p>
-            <PopularShelves category={category} />
-          </div>
         </section>
       ) : (
         <>
           <section>
+            <p className="ch-overline" style={{ marginBottom: "var(--space-2)" }}>Your list</p>
             <article className="ch-spot">
               <Link href={`/item/${spot.entryId}`} aria-label={`Open ${spot.title}`} style={{ display: "block" }}>
                 <Cover src={spot.coverUrl} title={spot.title} />
@@ -137,6 +134,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
         </section>
       )}
+
+      {/* Always shown, and kept apart from the person's own list: these are suggestions, not things they added. */}
+      <section className="sec popular">
+        <p className="ch-overline">Popular right now</p>
+        <p className="hint">Suggestions for you to browse. They only join your list when you tap Add.</p>
+        <PopularShelves category={category} />
+      </section>
     </>
   );
 }
