@@ -14,7 +14,8 @@ import { addEntry } from "@/lib/library";
 import { requireUser } from "@/lib/session";
 
 type Form = { message?: string; error?: string };
-const id = z.string().min(1).max(64);
+const id = z.string().min(1).max(64); // user ids
+const groupIdSchema = z.uuid(); // group ids are uuids; anything else would make Postgres throw
 
 function refresh() {
   revalidatePath("/friends");
@@ -64,14 +65,14 @@ export async function makeGroup(_prev: Form | undefined, formData: FormData): Pr
 export async function addMember(groupId: string, formData: FormData) {
   const { user } = await requireUser();
   const friend = z.string().max(64).safeParse(formData.get("friend"));
-  if (friend.success && id.safeParse(groupId).success) await addGroupMember(user.id, groupId, friend.data);
+  if (friend.success && groupIdSchema.safeParse(groupId).success) await addGroupMember(user.id, groupId, friend.data);
   refresh();
   revalidatePath(`/friends/group/${groupId}`);
 }
 
 export async function kickMember(groupId: string, memberId: string) {
   const { user } = await requireUser();
-  if (id.safeParse(groupId).success && id.safeParse(memberId).success) await removeGroupMember(user.id, groupId, memberId);
+  if (groupIdSchema.safeParse(groupId).success && id.safeParse(memberId).success) await removeGroupMember(user.id, groupId, memberId);
   refresh();
   revalidatePath(`/friends/group/${groupId}`);
 }
@@ -79,7 +80,7 @@ export async function kickMember(groupId: string, memberId: string) {
 export async function renameGroupAction(groupId: string, _prev: Form | undefined, formData: FormData): Promise<Form> {
   const { user } = await requireUser();
   const name = z.string().max(80).safeParse(formData.get("name"));
-  if (!name.success || !(await renameGroup(user.id, groupId, name.data))) return { error: "Only the person who made the group can rename it." };
+  if (!name.success || !groupIdSchema.safeParse(groupId).success || !(await renameGroup(user.id, groupId, name.data))) return { error: "Only the person who made the group can rename it." };
   refresh();
   revalidatePath(`/friends/group/${groupId}`);
   return { message: "Saved." };
@@ -87,14 +88,14 @@ export async function renameGroupAction(groupId: string, _prev: Form | undefined
 
 export async function leaveGroupAction(groupId: string) {
   const { user } = await requireUser();
-  if (id.safeParse(groupId).success) await leaveGroup(user.id, groupId);
+  if (groupIdSchema.safeParse(groupId).success) await leaveGroup(user.id, groupId);
   refresh();
   redirect("/friends");
 }
 
 export async function deleteGroupAction(groupId: string) {
   const { user } = await requireUser();
-  if (id.safeParse(groupId).success) await deleteGroup(user.id, groupId);
+  if (groupIdSchema.safeParse(groupId).success) await deleteGroup(user.id, groupId);
   refresh();
   redirect("/friends");
 }

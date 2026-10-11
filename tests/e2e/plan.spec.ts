@@ -234,3 +234,9 @@ test("Book a time from an item page", async ({ page }) => {
   const [s] = await db.select().from(planSession).where(and(eq(planSession.userId, me), eq(planSession.title, "Interstellar")));
   expect(s.startsAt.toISOString()).toBe(`${FUTURE}T18:00:00.000Z`);
 });
+
+test("booking with a malformed item id says it is not in the library instead of crashing", async ({ page }) => {
+  await start(page);
+  await page.goto("/plan/book?entry=not-a-uuid");
+  await expect(page.getByText("That item is not in your library.")).toBeVisible();
+});

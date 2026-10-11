@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 import { CategoryTag } from "@/components/badges";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
@@ -26,7 +27,8 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
 
   // Booking a specific item from its own page.
   if (sp.entry) {
-    const rows = await db.select({ e: entry, i: item }).from(entry).innerJoin(item, eq(entry.itemId, item.id)).where(and(eq(entry.id, sp.entry), eq(entry.userId, user.id)));
+    const entryId = z.uuid().safeParse(sp.entry); // a malformed id would make Postgres throw
+    const rows = !entryId.success ? [] : await db.select({ e: entry, i: item }).from(entry).innerJoin(item, eq(entry.itemId, item.id)).where(and(eq(entry.id, entryId.data), eq(entry.userId, user.id)));
     const row = rows[0];
     if (!row) {
       return (
