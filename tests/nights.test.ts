@@ -177,6 +177,19 @@ describe("locking in a time", () => {
     expect(await lockIn(a.id, nightId, v.options[1].id)).toEqual({ ok: false, error: "A time has already been picked." });
   });
 
+  it("two picks at once leave one chosen time and one session per person", async () => {
+    const { a, nightId } = await newNight();
+    const v = (await nightForMember(a.id, nightId))!;
+    const results = await Promise.all([lockIn(a.id, nightId, v.options[0].id), lockIn(a.id, nightId, v.options[1].id)]);
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    const after = (await nightForMember(a.id, nightId))!;
+    const winner = results[0].ok ? v.options[0].id : v.options[1].id;
+    expect(after.chosen?.id).toBe(winner);
+    const sessions = await db.select().from(planSession).where(eq(planSession.nightId, nightId));
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].startsAt.toISOString()).toBe(v.options.find((o) => o.id === winner)!.startsAt.toISOString());
+  });
+
   it("the night shows up in the calendar feed", async () => {
     const { a, nightId } = await newNight();
     const v = (await nightForMember(a.id, nightId))!;

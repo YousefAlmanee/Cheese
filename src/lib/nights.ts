@@ -235,7 +235,9 @@ export async function lockIn(hostId: string, nightId: string, optionId: string):
   const going = new Map(voters.map((v) => [v.id, v.userId]));
   if (hostPart) going.set(hostPart.id, hostId);
 
-  await db.update(night).set({ status: "set", chosenOptionId: optionId }).where(eq(night.id, nightId));
+  // Only one pick can win: a second tap or another tab finds the night is no longer "voting".
+  const claimed = await db.update(night).set({ status: "set", chosenOptionId: optionId }).where(and(eq(night.id, nightId), eq(night.status, "voting"))).returning({ id: night.id });
+  if (!claimed.length) return { ok: false, error: "A time has already been picked." };
   if (going.size) await db.update(nightParticipant).set({ rsvp: "going" }).where(inArray(nightParticipant.id, [...going.keys()]));
   let sessions = 0;
   for (const userId of new Set([...going.values()].filter((u): u is string => Boolean(u)))) {
