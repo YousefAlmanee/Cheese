@@ -2,5 +2,10 @@
   command = "npm run build"
   publish = ".next"
 
+# Only production deploys change the database. Previews and branch deploys share the same
+# DATABASE_URL, so migrating from them would alter production before their code is merged.
+[context.production]
+  command = "npm run db:migrate && npm run build"
+
 [build.environment]
   NODE_VERSION = "22"

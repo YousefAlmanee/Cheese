@@ -15,7 +15,7 @@ Cheese needs PostgreSQL. The easiest free one is Neon.
    npm install
    DATABASE_URL="paste the connection string" npm run db:migrate
    ```
-   Do this again after any update that changes the database (the migration command is safe to repeat).
+   After this first run you don't need to repeat it: every production deploy on Netlify applies new migrations before building (`DATABASE_URL` must be set in Netlify, step 7). Previews and branch deploys do not touch the database.
 
 ## 2. Two secrets of your own
 
