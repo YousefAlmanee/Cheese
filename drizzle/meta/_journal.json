@@ -8,6 +8,20 @@
       "when": 1791688396246,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791743897943,
+      "tag": "0001_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791745065153,
+      "tag": "0002_friendship_order_c_collation",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { entry, friendGroup, friendship, groupMember, profile } from "@/db/schema";
 import { loadGroupView } from "@/lib/common";
@@ -358,5 +358,12 @@ describe("friend hints", () => {
     expect(wantingHint(["Sara", "Omar"])).toBe("Sara and Omar want this");
     expect(wantingHint(["Sara", "Omar", "Lina"])).toBe("Sara, Omar and Lina want this");
     expect(wantingHint(["Sara", "Omar", "Lina", "Khalid"])).toBe("Sara, Omar and 2 more want this");
+  });
+});
+
+describe("friendship ordering", () => {
+  it("is checked byte-wise, whatever collation the database was created with", async () => {
+    const res = await db.execute<{ def: string }>(sql`select pg_get_constraintdef(oid) as def from pg_constraint where conname = 'friendship_order'`);
+    expect(res.rows[0].def).toContain('COLLATE "C"');
   });
 });
