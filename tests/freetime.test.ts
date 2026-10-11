@@ -133,7 +133,8 @@ describe("calendar feed (.ics)", () => {
   const ev = { uid: "abc@cheese", start: new Date("2026-10-16T18:00:00Z"), end: new Date("2026-10-16T19:12:00Z"), summary: "Frieren, ep 8; with Sara", description: "Anime\nBring snacks" };
 
   it("escapes commas, semicolons, backslashes and newlines", () => {
-    expect(escapeText("a,b;c\\d\ne")).toBe("a\\,b\;c\\\\d\\ne");
+    expect(escapeText("a,b;c\\d\ne")).toBe("a\\,b\\;c\\\\d\\ne");
+    expect(escapeText("one\rtwo\r\nthree")).toBe("one\\ntwo\\nthree"); // a lone carriage return must not survive either
   });
 
   it("folds long lines at 75 bytes without splitting a character", () => {
@@ -150,7 +151,7 @@ describe("calendar feed (.ics)", () => {
     expect(text).toContain("DTSTART:20261016T180000Z");
     expect(text).toContain("DTEND:20261016T191200Z");
     expect(text).toContain("DTSTAMP:20261011T000000Z");
-    expect(text).toContain("SUMMARY:Frieren\\, ep 8\; with Sara");
+    expect(text).toContain("SUMMARY:Frieren\\, ep 8\\; with Sara");
     expect(text).toContain("DESCRIPTION:Anime\\nBring snacks");
     expect(text.match(/BEGIN:VEVENT/g)).toHaveLength(1);
     expect(text.split("\r\n").every((l) => !l.includes("\n"))).toBe(true);
