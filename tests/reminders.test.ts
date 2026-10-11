@@ -95,6 +95,15 @@ describe("sendDueReminders", () => {
     expect(sent).toHaveLength(1);
   });
 
+  it("lets the push service hold the message only until the session starts", async () => {
+    const u = await subscribed("Yousef");
+    await session(u.id, min(25));
+    await session(u.id, min(-3));
+    await sendDueReminders(NOW);
+    const ttls = sent.map((x) => (x.options as { TTL: number }).TTL).sort((a, b) => a - b);
+    expect(ttls).toEqual([60, 25 * 60]); // never below a minute, even for a session that just started
+  });
+
   it("waits until the session is inside the person's lead time", async () => {
     const u = await subscribed("Yousef");
     await session(u.id, min(50)); // default lead is 30 minutes
@@ -130,6 +139,28 @@ describe("sendDueReminders", () => {
     const res = await sendDueReminders(NOW);
     expect(res.sent).toBe(1);
     expect(sent[0].payload.body).toMatch(/^Starting now/);
+  });
+
+  it("tries again on the next run when nothing could be delivered", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const u = await subscribed("Yousef");
+    await session(u.id, min(10));
+    failWith = 500;
+    expect(await sendDueReminders(NOW)).toEqual({ due: 1, sent: 0 });
+    expect((await db.select().from(planSession))[0].remindedAt).toBeNull();
+    failWith = null;
+    expect(await sendDueReminders(min(5))).toEqual({ due: 1, sent: 1 });
+    expect((await db.select().from(planSession))[0].remindedAt).not.toBeNull();
+    vi.restoreAllMocks();
+  });
+
+  it("sends more reminders than one batch holds", async () => {
+    for (let i = 0; i < 13; i++) {
+      const u = await subscribed(`Person${i}`);
+      await session(u.id, min(10));
+    }
+    expect(await sendDueReminders(NOW)).toEqual({ due: 13, sent: 13 });
+    expect(sent).toHaveLength(13);
   });
 
   it("two runs at once send it only once", async () => {
