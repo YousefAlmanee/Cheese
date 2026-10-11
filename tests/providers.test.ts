@@ -289,6 +289,15 @@ describe("IGDB", () => {
     expect(d.totalUnits).toBeNull();
   });
 
+  it("does not let a trailing backslash escape the closing quote", async () => {
+    vi.stubEnv("TWITCH_CLIENT_ID", "cid");
+    vi.stubEnv("TWITCH_CLIENT_SECRET", "sec");
+    mockFetch(igdbRoutes());
+    await igdb.search("halo\\", signal());
+    const body = String(calls.find((c) => c.url.endsWith("/games"))!.init?.body);
+    expect(body).toMatch(/^search "halo "; fields/);
+  });
+
   it("does not let quotes in a search break out of the query", async () => {
     vi.stubEnv("TWITCH_CLIENT_ID", "cid");
     vi.stubEnv("TWITCH_CLIENT_SECRET", "sec");

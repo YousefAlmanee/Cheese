@@ -71,7 +71,7 @@ export const igdb: Provider = {
   enabled: () => Boolean(process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET),
 
   async search(q, signal) {
-    const safe = q.replace(/["\;]/g, " ");
+    const safe = q.replace(/["\\;]/g, " "); // a trailing backslash would escape the closing quote
     const games = await query<Game[]>("games", `search "${safe}"; ${FIELDS} where version_parent = null; limit 8;`, signal);
     return games.map((g) => gameDraft(g, null));
   },
