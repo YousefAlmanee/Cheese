@@ -83,6 +83,7 @@ Another host works too. Any host that runs Next.js works, and any scheduler can 
 | `TMDB_API_KEY` | for movies and series | step 4 |
 | `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` | for games | step 5 |
 | `GOOGLE_BOOKS_API_KEY` | no | step 5 |
+| `DATABASE_POOL_MAX` | no | connections per server instance, default 5 |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | for reminders | step 6 |
 | `CRON_SECRET` | for reminders | step 6 |
 | `ENABLE_DEV_LOGIN` | never set this online | |
