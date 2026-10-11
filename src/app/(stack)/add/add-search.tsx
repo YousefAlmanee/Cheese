@@ -6,6 +6,7 @@ import { addToLibrary } from "@/app/actions/library";
 import { CategoryTag, StatusBadge } from "@/components/badges";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
+import { PopularShelves } from "@/components/popular-shelves";
 import { CATEGORIES, type Category, type Status } from "@/db/schema";
 import { CATEGORY_LABEL, CATEGORY_PLURAL, formatMinutes, totalMinutes } from "@/lib/length";
 import type { ItemDraft } from "@/lib/providers/types";
@@ -40,8 +41,9 @@ export function AddSearch() {
   const [, startTransition] = useTransition();
   const seq = useRef(0);
 
+  const term = q.trim();
+
   useEffect(() => {
-    const term = q.trim();
     if (term.length < 2) {
       setData(null);
       setLoading(false);
@@ -70,7 +72,7 @@ export function AddSearch() {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [q, cat]);
+  }, [q, cat, term]);
 
   function add(h: ItemDraft) {
     const k = key(h);
@@ -89,7 +91,6 @@ export function AddSearch() {
     });
   }
 
-  const term = q.trim();
   const inLib = { ...(data?.inLibrary ?? {}), ...added };
 
   return (
@@ -117,9 +118,9 @@ export function AddSearch() {
       </div>
 
       <section className="sec" aria-live="polite">
-        {term.length < 2 && (
-          <p className="hint">Type a title. Movies, series, anime, manga, books and games are searched together.</p>
-        )}
+        {/* Before typing: popular shelves, one row per category, for discovery. */}
+        {term.length < 2 && <PopularShelves category={cat === "all" ? undefined : cat} />}
+
         {loading && <p className="hint">Searching…</p>}
         {failed && <p className="error">Search is not working right now. Check your connection and try again.</p>}
 

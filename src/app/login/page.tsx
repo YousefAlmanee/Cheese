@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { devLoginEnabled, googleConfigured } from "@/lib/auth";
+import { googleConfigured } from "@/lib/auth";
 import { getSession } from "@/lib/session";
 import { safeNext } from "@/lib/safe-next";
 import { LoginForm } from "./login-form";
@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </header>
       <section className="stack">
         <p>Everything you want to watch, read and play, in one place, with time set aside for it and friends to do it with.</p>
-        <LoginForm google={googleConfigured} dev={devLoginEnabled} next={next} />
+        <LoginForm google={googleConfigured} next={next} />
       </section>
     </main>
   );

@@ -7,7 +7,7 @@ import { addEntry, upsertItem } from "@/lib/library";
 import type { ItemDraft } from "@/lib/providers/types";
 import { resetDb } from "../helpers";
 import { seedDemo, userIdByName } from "../seed";
-import { signIn } from "./helpers";
+import { fillAndSubmit, signIn } from "./helpers";
 
 test.beforeEach(async () => {
   await resetDb();
@@ -51,10 +51,7 @@ test("a newcomer opens an invite link, signs in, and becomes friends with a butt
   const sara = await ctx.newPage();
   await sara.goto(`/i/${p.inviteCode}`);
   await expect(sara).toHaveURL(/\/login\?next=%2Fi%2F/);
-  await sara.fill("#name", "Sara");
-  await sara.fill("#email", "sara@example.com");
-  await sara.fill("#password", "correct horse battery");
-  await sara.getByRole("button", { name: "Sign in or create account" }).click();
+  await fillAndSubmit(sara, "Sara");
   await sara.waitForURL(new RegExp(`/i/${p.inviteCode}$`));
   await expect(sara.getByText("Yousef invited you to Cheese.")).toBeVisible();
 

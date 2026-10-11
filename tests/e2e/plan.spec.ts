@@ -199,7 +199,7 @@ test("the calendar link serves my sessions and nobody else's", async ({ page, br
   const body = await res.text();
   expect(body).toContain("BEGIN:VCALENDAR");
   expect(body).toContain("SUMMARY:Dune\\, 40 pages");
-  expect(body).toContain("DESCRIPTION:Tea\; no phone");
+  expect(body).toContain("DESCRIPTION:Tea\\; no phone");
   expect(body).toContain(`DTSTART:${FUTURE.replaceAll("-", "")}T170000Z`);
 
   expect((await request.get("/api/calendar/not-a-real-token.ics")).status()).toBe(404);

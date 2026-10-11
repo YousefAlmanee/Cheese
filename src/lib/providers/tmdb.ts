@@ -107,6 +107,21 @@ export const tmdb: Provider = {
     return out;
   },
 
+  async popular(signal) {
+    const a = auth();
+    const url = `${BASE}/trending/all/week?language=en-US${a.query}`;
+    const data = await fetchJson<SearchResp>("TMDB", url, { headers: a.headers }, signal);
+    const out: ItemDraft[] = [];
+    for (const r of data.results ?? []) {
+      if (r.media_type === "movie" && r.title) {
+        out.push(movieDraft({ id: r.id, title: r.title, release_date: r.release_date, poster_path: r.poster_path, overview: r.overview }));
+      } else if (r.media_type === "tv" && r.name) {
+        out.push(tvDraft({ id: r.id, name: r.name, first_air_date: r.first_air_date, poster_path: r.poster_path, overview: r.overview }));
+      }
+    }
+    return out;
+  },
+
   async details(ref: Ref, signal) {
     const m = ref.externalId.match(/^(movie|tv)\/(\d+)$/);
     if (!m) throw new ProviderError("TMDB", `bad id ${ref.externalId}`);

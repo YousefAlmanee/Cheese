@@ -32,7 +32,8 @@ button { cursor: pointer; }
 .ch-tab-add { flex: none; width: 48px; height: 48px; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; margin: 0 var(--space-2); }
 
 /* CategoryChips */
-.ch-chips { display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; padding-inline: var(--space-4); }
+.ch-chips { display: flex; gap: var(--space-2); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: var(--space-4); min-width: 0; scrollbar-width: none; padding-block: var(--space-2); padding-inline: var(--space-4); }
+.ch-chip { scroll-snap-align: start; }
 .ch-chips::-webkit-scrollbar { display: none; }
 .ch-chip { position: relative; flex: none; min-height: 36px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font: 700 14px/20px var(--font-sans); white-space: nowrap; }
 .ch-chip::before { content: ""; position: absolute; inset: -4px 0; }
@@ -56,10 +57,10 @@ button { cursor: pointer; }
 .ch-progress--lg { height: var(--size-progress-lg); }
 
 /* CoverTile */
-.ch-tile { display: flex; flex-direction: column; gap: 6px; width: var(--tile-w, var(--size-tile)); flex: none; min-width: 0; }
+.ch-tile { display: flex; flex-direction: column; gap: 6px; width: var(--tile-w, var(--size-tile)); flex: none; min-width: 0; scroll-snap-align: start; }
 .ch-tile__title { font: 700 13px/16px var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-tile__meta { font: 600 12px/16px var(--font-sans); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ch-tile-row { display: flex; gap: var(--space-3); overflow-x: auto; scrollbar-width: none; }
+.ch-tile-row { display: flex; gap: var(--space-3); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: var(--space-4); min-width: 0; scrollbar-width: none; }
 .ch-tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-3); }
 .ch-tile-grid .ch-tile { width: auto; }
 
@@ -132,6 +133,27 @@ button { cursor: pointer; }
 /* ListRow */
 .ch-list { display: flex; flex-direction: column; }
 .ch-list--card { background: var(--surface); border-radius: var(--radius-lg); padding: 0 var(--space-4); }
+
+/* Notification bell badge + unread marker */
+.ch-bell { position: relative; }
+.ch-bell__dot { position: absolute; top: 0; right: 0; min-width: 16px; height: 16px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--accent); color: var(--on-accent); font: 800 10px/1 var(--font-sans); }
+.ch-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; align-self: center; }
+
+/* Pull-to-refresh indicator */
+.ch-ptr { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; pointer-events: none; transition: opacity .2s ease; }
+.ch-ptr__spin { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--surface-quiet); border-top-color: var(--ink); }
+.ch-ptr__spin--go { animation: ch-spin .7s linear infinite; }
+@keyframes ch-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ch-ptr__spin--go { animation-duration: 1.4s; } }
+
+/* Loading skeletons: instant placeholders shown while a page's data loads. */
+@keyframes ch-skel { to { background-position: -200% 0; } }
+.ch-skel { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-quiet) 50%, var(--surface) 75%); background-size: 200% 100%; animation: ch-skel 1.3s ease-in-out infinite; border-radius: var(--radius-sm); }
+.ch-skel--line { height: 12px; border-radius: var(--radius-pill); }
+.ch-skel--chip { height: 36px; width: 68px; flex: none; border-radius: var(--radius-pill); }
+.ch-skel--cover { width: 40px; aspect-ratio: 2 / 3; border-radius: var(--radius-xs); }
+.ch-skel--pill { height: 36px; width: 64px; border-radius: var(--radius-pill); }
+@media (prefers-reduced-motion: reduce) { .ch-skel { animation: none; } }
 .ch-lrow { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; min-height: 64px; padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
 .ch-lrow:last-child { border-bottom: 0; }
 .ch-lrow .ch-cover { width: 40px; border-radius: var(--radius-xs); padding: 0; }

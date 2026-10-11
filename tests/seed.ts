@@ -45,6 +45,6 @@ export async function seedDemo(userId: string) {
 }
 
 export async function userIdByName(name: string) {
-  const [u] = await db.select().from(user).where(eq(user.email, `${name.toLowerCase()}@example.com`));
+  const [u] = await db.select().from(user).where(eq(user.username, name.toLowerCase()));
   return u.id;
 }

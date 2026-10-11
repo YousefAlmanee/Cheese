@@ -1,12 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { username } from "better-auth/plugins";
 import { db, schema } from "@/db";
 import { secretProblem } from "./env-check";
 import { ensureProfile } from "./profile";
-
-/** Email and password sign-in exists only for local development and tests. Never in production. */
-export const devLoginEnabled = process.env.ENABLE_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
+import { isValidUsername } from "./username";
 
 // A weak or missing secret in production would let anyone forge a login session.
 if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
@@ -22,7 +21,8 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
-  emailAndPassword: { enabled: devLoginEnabled, autoSignIn: true, minPasswordLength: 8 },
+  // Username + 4-digit PIN is the primary sign-in method; the PIN is the account password.
+  emailAndPassword: { enabled: true, autoSignIn: true, minPasswordLength: 4, maxPasswordLength: 4 },
   socialProviders: googleConfigured
     ? {
         google: {
@@ -38,10 +38,15 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          await ensureProfile({ id: user.id, name: user.name, email: user.email });
+          // A chosen username (from username+PIN sign-up) becomes the public handle; Google users fall back to a generated one.
+          const preferred = (user as { username?: string | null }).username ?? undefined;
+          await ensureProfile({ id: user.id, name: user.name, email: user.email, username: preferred });
         },
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    username({ minUsernameLength: 3, maxUsernameLength: 20, usernameValidator: isValidUsername }),
+    nextCookies(),
+  ],
 });
