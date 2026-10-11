@@ -237,6 +237,7 @@ test("unfriending removes the friendship and the list", async ({ browser }) => {
   const [pb] = await db.select().from(profile).where(eq(profile.userId, b.id));
   await a.page.goto(`/friends/u/${pb.username}`);
   await a.page.getByRole("button", { name: "Remove Sara as a friend" }).click();
+  await a.page.getByRole("button", { name: "Yes, remove" }).click(); // the first tap only asks
   await expect(a.page).toHaveURL(/\/friends\/people$/);
   expect(await db.select().from(friendship)).toHaveLength(0);
   expect((await a.page.goto(`/friends/u/${pb.username}`))?.status()).toBe(404);
@@ -258,6 +259,7 @@ test("group details: add a friend, leave, and the group stays for the others", a
   await expect(a.page.getByText("People · 3")).toBeVisible();
 
   await a.page.getByRole("button", { name: "Leave group" }).click();
+  await a.page.getByRole("button", { name: "Yes, leave" }).click(); // the first tap only asks
   await expect(a.page).toHaveURL(/\/friends$/);
   await b.page.goto(`/friends/group/${g.id}`);
   await expect(b.page.getByText("People · 2")).toBeVisible();

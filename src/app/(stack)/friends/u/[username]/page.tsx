@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { unfriend, wantToo } from "@/app/actions/friends";
 import { Avatar } from "@/components/avatars";
 import { CategoryTag, StatusBadge } from "@/components/badges";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { StarRating } from "@/components/star-rating";
@@ -88,9 +89,7 @@ export default async function FriendPage({ params }: { params: Promise<{ usernam
       </section>
 
       <section>
-        <form action={unfriend.bind(null, person.userId)}>
-          <button className="ch-btn ch-btn--ghost ch-btn--danger ch-btn--block">Remove {person.displayName} as a friend</button>
-        </form>
+        <ConfirmAction action={unfriend.bind(null, person.userId)} label={`Remove ${person.displayName} as a friend`} confirmLabel="Yes, remove" keepLabel="Keep" />
         <p className="hint" style={{ paddingTop: 8 }}>Things you hid are never shown to friends.</p>
       </section>
     </>

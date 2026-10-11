@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { addMember, deleteGroupAction, kickMember, leaveGroupAction, renameGroupAction } from "@/app/actions/friends";
 import { Avatar } from "@/components/avatars";
+import { ConfirmAction } from "@/components/confirm-action";
 import { ActionForm } from "@/components/form-field";
 import { Icon } from "@/components/icons";
 import { getGroup, listFriends } from "@/lib/friends";
@@ -82,14 +83,8 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
       )}
 
       <section className="stack">
-        <form action={leaveGroupAction.bind(null, group.id)}>
-          <button className="ch-btn ch-btn--ghost ch-btn--block">Leave group</button>
-        </form>
-        {owner && (
-          <form action={deleteGroupAction.bind(null, group.id)}>
-            <button className="ch-btn ch-btn--ghost ch-btn--danger ch-btn--block">Delete group for everyone</button>
-          </form>
-        )}
+        <ConfirmAction action={leaveGroupAction.bind(null, group.id)} label="Leave group" confirmLabel="Yes, leave" danger={false} />
+        {owner && <ConfirmAction action={deleteGroupAction.bind(null, group.id)} label="Delete group for everyone" confirmLabel="Yes, delete it" keepLabel="Keep it" />}
       </section>
     </>
   );

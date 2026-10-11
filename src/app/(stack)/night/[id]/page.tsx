@@ -4,6 +4,7 @@ import { z } from "zod";
 import { answerRsvp, changeTime, dropNight, finishNight, pickTime, vote } from "@/app/actions/nights";
 import { AvatarStack } from "@/components/avatars";
 import { CategoryTag } from "@/components/badges";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { LocalTime } from "@/components/local-time";
@@ -148,9 +149,7 @@ export default async function NightPage({ params }: { params: Promise<{ id: stri
               </form>
             </>
           )}
-          <form action={dropNight.bind(null, v.night.id)}>
-            <button className="ch-btn ch-btn--ghost ch-btn--danger ch-btn--block">Cancel this night</button>
-          </form>
+          <ConfirmAction action={dropNight.bind(null, v.night.id)} label="Cancel this night" confirmLabel="Yes, cancel it" keepLabel="Keep it" />
         </section>
       )}
     </>

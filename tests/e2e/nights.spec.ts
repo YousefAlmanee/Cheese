@@ -218,6 +218,7 @@ test("changing the time and cancelling take the night off everyone's plan", asyn
   await a.page.locator(".ch-time").first().getByRole("button", { name: "Pick this" }).click();
   await expect.poll(async () => (await db.select().from(planSession)).length).toBe(2);
   await a.page.getByRole("button", { name: "Cancel this night" }).click();
+  await a.page.getByRole("button", { name: "Yes, cancel it" }).click(); // the first tap only asks
   await expect(a.page).toHaveURL(/\/friends$/);
   expect(await db.select().from(planSession)).toHaveLength(0);
   await b.page.goto(`/night/${id}`);

@@ -102,6 +102,7 @@ test("removing a session frees the time again", async ({ page }) => {
   await page.locator(".ch-lrow", { hasText: "Frieren" }).getByRole("button", { name: "Book" }).click();
   await page.getByRole("link", { name: /Frieren · 6 episodes/ }).click();
   await page.getByRole("button", { name: "Remove this session" }).click();
+  await page.getByRole("button", { name: "Yes, remove it" }).click(); // the first tap only asks
   await page.goto(`/plan?day=${FUTURE}`);
   await expect(page.getByText("Free · 3h")).toBeVisible();
   expect(await db.select().from(planSession).where(eq(planSession.userId, me))).toHaveLength(0);

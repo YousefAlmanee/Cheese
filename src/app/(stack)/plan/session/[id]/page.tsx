@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { deleteSession, markSessionDone } from "@/app/actions/plan";
 import { CategoryTag } from "@/components/badges";
+import { ConfirmAction } from "@/components/confirm-action";
 import { Icon } from "@/components/icons";
 import { formatMinutes } from "@/lib/length";
 import { getOwnSession } from "@/lib/sessions";
@@ -57,9 +58,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
             Open the night with friends
           </Link>
         )}
-        <form action={deleteSession.bind(null, s.id)}>
-          <button className="ch-btn ch-btn--ghost ch-btn--danger ch-btn--block">Remove this session</button>
-        </form>
+        <ConfirmAction action={deleteSession.bind(null, s.id)} label="Remove this session" confirmLabel="Yes, remove it" keepLabel="Keep it" />
       </section>
     </>
   );
