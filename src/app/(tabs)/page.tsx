@@ -9,6 +9,7 @@ import { loadHome } from "@/lib/home";
 import { percent, shortProgress } from "@/lib/progress";
 import { requireUser } from "@/lib/session";
 import { hoursLabel } from "@/lib/time";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Tonight" };
 
@@ -78,9 +79,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 </p>
                 <div className="ch-spot__actions">
                   <form action={startEntry.bind(null, spot.entryId)} style={{ display: "contents" }}>
-                    <button className="ch-btn ch-btn--primary">
+                    <SubmitButton className="ch-btn ch-btn--primary">
                       <Icon name="play" small /> Start
-                    </button>
+                    </SubmitButton>
                   </form>
                   {spot.unit !== "watch" && <LogButton entryId={spot.entryId} unit={spot.unit} />}
                 </div>

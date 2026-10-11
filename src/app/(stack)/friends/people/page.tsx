@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { matchesWith } from "@/lib/common";
 import { findPersonByUsername, listFriends, listRequests } from "@/lib/friends";
 import { requireUser } from "@/lib/session";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "People" };
 
@@ -41,10 +42,10 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
                   <p className="ch-lrow__meta">@{p.username}</p>
                 </div>
                 <form action={answerRequest.bind(null, p.userId, true)}>
-                  <button className="ch-btn ch-btn--pill is-accent">Accept</button>
+                  <SubmitButton className="ch-btn ch-btn--pill is-accent">Accept</SubmitButton>
                 </form>
                 <form action={answerRequest.bind(null, p.userId, false)}>
-                  <button className="ch-btn ch-btn--pill">Decline</button>
+                  <SubmitButton className="ch-btn ch-btn--pill">Decline</SubmitButton>
                 </form>
               </div>
             ))}

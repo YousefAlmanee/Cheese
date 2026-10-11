@@ -11,6 +11,7 @@ import { CATEGORY_PLURAL, formatMinutes, totalMinutes } from "@/lib/length";
 import { upcomingNights } from "@/lib/nights";
 import { requireUser } from "@/lib/session";
 import { dayLabel, timeLabel } from "@/lib/time";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Friends" };
 
@@ -63,10 +64,10 @@ export default async function FriendsPage({ searchParams }: { searchParams: Prom
                 </div>
               </div>
               <form action={answerRequest.bind(null, p.userId, true)}>
-                <button className="ch-btn ch-btn--pill is-accent">Accept</button>
+                <SubmitButton className="ch-btn ch-btn--pill is-accent">Accept</SubmitButton>
               </form>
               <form action={answerRequest.bind(null, p.userId, false)}>
-                <button className="ch-btn ch-btn--pill">Decline</button>
+                <SubmitButton className="ch-btn ch-btn--pill">Decline</SubmitButton>
               </form>
             </div>
           ))}

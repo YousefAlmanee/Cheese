@@ -7,6 +7,7 @@ import { formatMinutes } from "@/lib/length";
 import { loadCandidates } from "@/lib/home";
 import { fitSuggestions } from "@/lib/suggest";
 import { requireUser } from "@/lib/session";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "I have time" };
 
@@ -71,7 +72,7 @@ export default async function FitPage({ searchParams }: { searchParams: Promise<
                       <CategoryTag category={s.category} />
                     </div>
                     <form action={startEntry.bind(null, s.entryId)}>
-                      <button className="ch-btn ch-btn--pill is-accent">Start</button>
+                      <SubmitButton className="ch-btn ch-btn--pill is-accent">Start</SubmitButton>
                     </form>
                   </div>
                 ))}

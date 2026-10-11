@@ -13,6 +13,7 @@ import { entry } from "@/db/schema";
 import { matchesWith } from "@/lib/common";
 import { findPersonByUsername, friendLibrary } from "@/lib/friends";
 import { requireUser } from "@/lib/session";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Friend" };
 
@@ -50,9 +51,9 @@ export default async function FriendPage({ params }: { params: Promise<{ usernam
           </Link>
         ) : (
           <form action={wantToo.bind(null, i.id, back, false)}>
-            <button className="ch-btn ch-btn--pill" aria-label={`Add ${i.title} to my list`}>
+            <SubmitButton className="ch-btn ch-btn--pill" aria-label={`Add ${i.title} to my list`}>
               <Icon name="plus" small /> Add
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>

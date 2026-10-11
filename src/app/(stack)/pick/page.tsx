@@ -7,6 +7,7 @@ import { CATEGORY_LABEL, CATEGORY_PLURAL, formatMinutes } from "@/lib/length";
 import { loadCandidates } from "@/lib/home";
 import { requireUser } from "@/lib/session";
 import { nextUpText, pickForMe } from "@/lib/suggest";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Pick for me" };
 
@@ -72,9 +73,9 @@ export default async function PickPage({ searchParams }: { searchParams: Promise
               </p>
               <div className="ch-spot__actions">
                 <form action={startEntry.bind(null, pick.entryId)} style={{ display: "contents" }}>
-                  <button className="ch-btn ch-btn--primary">
+                  <SubmitButton className="ch-btn ch-btn--primary">
                     <Icon name="play" small /> Start
-                  </button>
+                  </SubmitButton>
                 </form>
                 <Link className="ch-btn ch-btn--ghost" href={`${q({})}${q({}).includes("?") ? "&" : "?"}exclude=${pick.entryId}`}>
                   Pick again

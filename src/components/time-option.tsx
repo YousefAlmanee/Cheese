@@ -2,6 +2,7 @@ import { AvatarStack } from "./avatars";
 import { LocalTime } from "./local-time";
 import { formatMinutes } from "@/lib/length";
 import type { ParticipantView } from "@/lib/nights";
+import { SubmitButton } from "./submit-button";
 
 type Props = {
   startsAt: Date;
@@ -40,14 +41,14 @@ export function TimeOption({ startsAt, durationMin, hostZone, voters, total, vot
       <div className="stack" style={{ gap: "var(--space-2)", alignItems: "stretch" }}>
         {voteAction && (
           <form action={voteAction}>
-            <button className="ch-btn ch-btn--pill ch-vote" aria-pressed={voted}>
+            <SubmitButton className="ch-btn ch-btn--pill ch-vote" aria-pressed={voted}>
               {voted ? "Voted" : "Vote"}
-            </button>
+            </SubmitButton>
           </form>
         )}
         {pickAction && (
           <form action={pickAction}>
-            <button className="ch-btn ch-btn--pill is-accent">Pick this</button>
+            <SubmitButton className="ch-btn ch-btn--pill is-accent">Pick this</SubmitButton>
           </form>
         )}
       </div>

@@ -9,6 +9,7 @@ import { Icon } from "@/components/icons";
 import { loadGroupView } from "@/lib/common";
 import { CATEGORY_LABEL, formatMinutes, totalMinutes } from "@/lib/length";
 import { requireUser } from "@/lib/session";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Together" };
 
@@ -75,7 +76,7 @@ export default async function GroupItemPage({ params, searchParams }: { params: 
           </Link>
         ) : (
           <form action={wantToo.bind(null, it.id, here, true)}>
-            <button className="ch-btn ch-btn--ghost ch-btn--block">I want this too</button>
+            <SubmitButton className="ch-btn ch-btn--ghost ch-btn--block">I want this too</SubmitButton>
           </form>
         )}
       </section>

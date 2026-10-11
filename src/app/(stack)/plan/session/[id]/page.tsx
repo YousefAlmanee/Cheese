@@ -10,6 +10,7 @@ import { getOwnSession } from "@/lib/sessions";
 import { requireUser } from "@/lib/session";
 import { clock24, dayLabel } from "@/lib/time";
 import { DateTime } from "luxon";
+import { SubmitButton } from "@/components/submit-button";
 
 export const metadata = { title: "Session" };
 
@@ -47,7 +48,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
 
         {!s.done && (
           <form action={markSessionDone.bind(null, s.id)} className="stack">
-            <button className="ch-btn ch-btn--primary ch-btn--block">Mark done</button>
+            <SubmitButton className="ch-btn ch-btn--primary ch-btn--block">Mark done</SubmitButton>
             <p className="hint">
               {s.units && i ? `Adds ${s.units} ${s.units === 1 ? "unit" : "units"} to your progress on ${i.title} and counts the time toward your week.` : "Counts the time toward your week."}
             </p>
