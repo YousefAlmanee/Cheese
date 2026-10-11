@@ -16,7 +16,7 @@ vi.mock("web-push", () => ({
 
 import { db } from "@/db";
 import { planSession, profile, pushSubscription } from "@/db/schema";
-import { saveSubscription, sendToUser, subscriptionCount, removeSubscription } from "@/lib/push";
+import { isPushEndpoint, MAX_DEVICES, saveSubscription, sendToUser, subscriptionCount, removeSubscription } from "@/lib/push";
 import { sendDueReminders } from "@/lib/reminders";
 import { GET as cronGet } from "@/app/api/cron/reminders/route";
 import { makeUser, resetDb } from "./helpers";
@@ -53,6 +53,21 @@ describe("subscriptions", () => {
     await saveSubscription(b.id, { endpoint: "https://push.example/x", p256dh: "k2", auth: "a2" });
     expect(await subscriptionCount(a.id)).toBe(0);
     expect(await subscriptionCount(b.id)).toBe(1);
+  });
+  it("only accepts addresses from real push services", () => {
+    for (const ok of ["https://fcm.googleapis.com/fcm/send/abc", "https://updates.push.services.mozilla.com/wpush/v2/abc", "https://wns2-par02p.notify.windows.com/w/?token=x", "https://web.push.apple.com/abc"]) {
+      expect(isPushEndpoint(ok)).toBe(true);
+    }
+    for (const bad of ["http://fcm.googleapis.com/x", "https://evil.example/x", "https://fcm.googleapis.com.evil.example/x", "https://evilfcm.googleapis.com.example/x", "https://fcm.googleapis.com:8443/x", "https://127.0.0.1/x", "not a url"]) {
+      expect(isPushEndpoint(bad)).toBe(false);
+    }
+  });
+  it("limits how many devices one person can register", async () => {
+    const a = await makeUser("Yousef");
+    for (let i = 0; i < MAX_DEVICES; i++) expect(await saveSubscription(a.id, { endpoint: `https://push.example/d${i}`, p256dh: "k", auth: "a" })).toBe(true);
+    expect(await saveSubscription(a.id, { endpoint: "https://push.example/one-too-many", p256dh: "k", auth: "a" })).toBe(false);
+    expect(await saveSubscription(a.id, { endpoint: "https://push.example/d0", p256dh: "k2", auth: "a2" })).toBe(true); // refreshing a device you have is fine
+    expect(await subscriptionCount(a.id)).toBe(MAX_DEVICES);
   });
   it("can be removed only by their owner", async () => {
     const a = await makeUser("Yousef");

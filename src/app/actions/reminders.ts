@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { profile } from "@/db/schema";
-import { pushConfigured, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
+import { isPushEndpoint, pushConfigured, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
 import { requireUser } from "@/lib/session";
 
 const subSchema = z.object({
@@ -16,8 +16,9 @@ const subSchema = z.object({
 export async function savePushSubscription(input: unknown): Promise<{ ok: boolean; error?: string }> {
   const { user } = await requireUser();
   const parsed = subSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "That device could not be registered." };
-  await saveSubscription(user.id, { endpoint: parsed.data.endpoint, p256dh: parsed.data.keys.p256dh, auth: parsed.data.keys.auth });
+  if (!parsed.success || !isPushEndpoint(parsed.data.endpoint)) return { ok: false, error: "That device could not be registered." };
+  const saved = await saveSubscription(user.id, { endpoint: parsed.data.endpoint, p256dh: parsed.data.keys.p256dh, auth: parsed.data.keys.auth });
+  if (!saved) return { ok: false, error: "You have reminders on for too many devices. Turn some off first." };
   revalidatePath("/settings");
   return { ok: true };
 }

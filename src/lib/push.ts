@@ -16,11 +16,29 @@ function configure() {
   configured = true;
 }
 
-export async function saveSubscription(userId: string, sub: { endpoint: string; p256dh: string; auth: string }) {
+/** The services that browsers hand out push addresses for. Anything else would make the server call an arbitrary site. */
+const PUSH_HOSTS = ["fcm.googleapis.com", "android.googleapis.com", "push.services.mozilla.com", "notify.windows.com", "push.apple.com"];
+
+export function isPushEndpoint(endpoint: string): boolean {
+  try {
+    const u = new URL(endpoint);
+    return u.protocol === "https:" && !u.port && PUSH_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
+export const MAX_DEVICES = 10;
+
+/** Saves a device. False when the person already has the maximum number of other devices. */
+export async function saveSubscription(userId: string, sub: { endpoint: string; p256dh: string; auth: string }): Promise<boolean> {
+  const mine = await db.select({ endpoint: pushSubscription.endpoint }).from(pushSubscription).where(eq(pushSubscription.userId, userId));
+  if (mine.length >= MAX_DEVICES && !mine.some((m) => m.endpoint === sub.endpoint)) return false;
   await db
     .insert(pushSubscription)
     .values({ userId, ...sub })
     .onConflictDoUpdate({ target: pushSubscription.endpoint, set: { userId, p256dh: sub.p256dh, auth: sub.auth } });
+  return true;
 }
 
 export async function removeSubscription(userId: string, endpoint: string) {
