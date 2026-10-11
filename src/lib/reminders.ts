@@ -10,6 +10,7 @@ const GRACE_MS = 10 * 60_000;
 /**
  * Sends a reminder for every session that is coming up within its owner's lead time and has not been reminded about.
  * Safe to run every few minutes, and safe to run twice at once: each session is claimed before it is sent.
+ * If nothing could be delivered the claim is released, so the next run tries again until the grace window ends.
  */
 export async function sendDueReminders(now = new Date()): Promise<{ due: number; sent: number }> {
   const maxLead = 60 * 60_000;
@@ -43,6 +44,7 @@ export async function sendDueReminders(now = new Date()): Promise<{ due: number;
       tag: s.id,
     });
     if (res.sent > 0) sent++;
+    else await db.update(planSession).set({ remindedAt: null }).where(eq(planSession.id, s.id));
   }
   return { due, sent };
 }

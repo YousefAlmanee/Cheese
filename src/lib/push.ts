@@ -46,6 +46,7 @@ export async function sendToUser(userId: string, payload: PushPayload): Promise<
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) dead.push(s.id);
+        else console.error(`push to device ${s.id} failed`, status ?? e);
       }
     }),
   );

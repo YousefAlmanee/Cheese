@@ -132,6 +132,19 @@ describe("sendDueReminders", () => {
     expect(sent[0].payload.body).toMatch(/^Starting now/);
   });
 
+  it("tries again on the next run when nothing could be delivered", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const u = await subscribed("Yousef");
+    await session(u.id, min(10));
+    failWith = 500;
+    expect(await sendDueReminders(NOW)).toEqual({ due: 1, sent: 0 });
+    expect((await db.select().from(planSession))[0].remindedAt).toBeNull();
+    failWith = null;
+    expect(await sendDueReminders(min(5))).toEqual({ due: 1, sent: 1 });
+    expect((await db.select().from(planSession))[0].remindedAt).not.toBeNull();
+    vi.restoreAllMocks();
+  });
+
   it("two runs at once send it only once", async () => {
     const u = await subscribed("Yousef");
     await session(u.id, min(10));
