@@ -6,6 +6,7 @@ import { addToLibrary } from "@/app/actions/library";
 import { CategoryTag, StatusBadge } from "@/components/badges";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
+import { discoverHref } from "@/lib/discover";
 import { PopularShelves } from "@/components/popular-shelves";
 import { CATEGORIES, type Category, type Status } from "@/db/schema";
 import { CATEGORY_LABEL, CATEGORY_PLURAL, formatMinutes, totalMinutes } from "@/lib/length";
@@ -133,13 +134,33 @@ export function AddSearch() {
                 const existing = inLib[k];
                 return (
                   <div className="ch-lrow" key={k}>
-                    <Cover src={h.coverUrl} title={h.title} />
-                    <div className="ch-lrow__body">
-                      <p className="ch-row-title">{h.title}</p>
-                      {meta(h) && <p className="ch-lrow__meta">{meta(h)}</p>}
-                      <CategoryTag category={h.category} />
-                      {errors[k] && <p className="error">{errors[k]}</p>}
-                    </div>
+                    {(() => {
+                      // Tapping the cover or title opens the details page without adding the title.
+                      const href = existing ? `/item/${existing.entryId}` : discoverHref(h);
+                      const text = (
+                        <div className="ch-lrow__body">
+                          <p className="ch-row-title">{h.title}</p>
+                          {meta(h) && <p className="ch-lrow__meta">{meta(h)}</p>}
+                          <CategoryTag category={h.category} />
+                          {errors[k] && <p className="error">{errors[k]}</p>}
+                        </div>
+                      );
+                      return href ? (
+                        <>
+                          <Link href={href} tabIndex={-1} aria-hidden="true">
+                            <Cover src={h.coverUrl} title={h.title} />
+                          </Link>
+                          <Link href={href} aria-label={`Details for ${h.title} (${CATEGORY_LABEL[h.category]})`} style={{ color: "inherit", textDecoration: "none", minWidth: 0 }}>
+                            {text}
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Cover src={h.coverUrl} title={h.title} />
+                          {text}
+                        </>
+                      );
+                    })()}
                     {existing ? (
                       <Link href={`/item/${existing.entryId}`} aria-label={`Open ${h.title}`}>
                         <StatusBadge status={existing.status} />

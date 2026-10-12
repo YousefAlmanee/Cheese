@@ -5,33 +5,13 @@ import { CategoryTag, StatusBadge } from "@/components/badges";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { getOwnEntry } from "@/lib/entries";
-import { CATEGORY_LABEL, formatMinutes, totalMinutes } from "@/lib/length";
+import { CATEGORY_LABEL, lengthLine } from "@/lib/length";
 import { friendsWanting, wantingHint } from "@/lib/friends";
 import { requireUser } from "@/lib/session";
 import { shortDate } from "@/lib/time";
 import { ItemControls, RemoveButton, type ItemState } from "./item-controls";
 
 export const metadata = { title: "Item" };
-
-function lengthLine(it: { unit: string; totalUnits: number | null; unitSeconds: number | null }, override: number | null) {
-  const total = override ?? it.totalUnits;
-  if (total == null) return null;
-  const mins = totalMinutes(it as Parameters<typeof totalMinutes>[0], override);
-  switch (it.unit) {
-    case "watch":
-      return mins ? formatMinutes(mins) : null;
-    case "episode":
-      return `${total} episodes${it.unitSeconds ? ` · ${Math.round(it.unitSeconds / 60)} min each` : ""}`;
-    case "chapter":
-      return `${total} chapters`;
-    case "page":
-      return `${total} pages`;
-    case "minute":
-      return `About ${formatMinutes(total)} to finish`;
-    default:
-      return null;
-  }
-}
 
 export default async function ItemPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ rate?: string }> }) {
   const { user, profile } = await requireUser();

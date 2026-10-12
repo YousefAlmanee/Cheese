@@ -306,3 +306,18 @@ export function wantingHint(names: string[]): string {
   if (names.length === 3) return `${names[0]}, ${names[1]} and ${names[2]} want this`;
   return `${names[0]}, ${names[1]} and ${names.length - 2} more want this`;
 }
+
+/** Friends who have this item in their list, with how far along they are. Hidden entries never show. */
+export async function friendsWithItem(userId: string, itemId: string) {
+  const friends = await listFriends(userId);
+  if (!friends.length) return [];
+  const rows = await db
+    .select({ userId: entry.userId, status: entry.status, ratingHalf: entry.ratingHalf })
+    .from(entry)
+    .where(and(inArray(entry.userId, friends.map((f) => f.userId)), eq(entry.itemId, itemId), eq(entry.hidden, false)));
+  const byId = new Map(rows.map((r) => [r.userId, r]));
+  return friends.flatMap((f) => {
+    const r = byId.get(f.userId);
+    return r ? [{ person: f, status: r.status, ratingHalf: r.ratingHalf }] : [];
+  });
+}

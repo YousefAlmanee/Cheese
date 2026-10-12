@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { addToLibrary } from "@/app/actions/library";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
+import { discoverHref } from "@/lib/discover";
 import { CATEGORIES, type Category, type Status } from "@/db/schema";
 import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import type { ItemDraft } from "@/lib/providers/types";
@@ -91,8 +92,23 @@ export function PopularShelves({ category }: { category?: Category }) {
               const existing = inLib[k];
               return (
                 <div className="ch-tile" key={k}>
-                  <Cover src={h.coverUrl} title={h.title} />
-                  <div className="ch-tile__title">{h.title}</div>
+                  {(() => {
+                    // Cover and title open the details page, so a title can be read about before it is added.
+                    const href = existing ? `/item/${existing.entryId}` : discoverHref(h);
+                    const body = (
+                      <>
+                        <Cover src={h.coverUrl} title={h.title} />
+                        <div className="ch-tile__title">{h.title}</div>
+                      </>
+                    );
+                    return href ? (
+                      <Link href={href} aria-label={`Details for ${h.title}`} style={{ display: "flex", flexDirection: "column", gap: 6, color: "inherit", textDecoration: "none" }}>
+                        {body}
+                      </Link>
+                    ) : (
+                      body
+                    );
+                  })()}
                   {existing ? (
                     <Link href={`/item/${existing.entryId}`} className="ch-btn ch-btn--pill ch-btn--block" style={{ justifyContent: "center" }} aria-label={`Open ${h.title}`}>
                       <Icon name="check" small /> Added

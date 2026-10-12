@@ -64,3 +64,24 @@ export function formatMinutes(min: number): string {
   const r = m % 60;
   return r ? `${h}h ${r}m` : `${h}h`;
 }
+
+/** "155 min", "24 episodes · 25 min each", "320 pages" and so on, or null when the size is not known. */
+export function lengthLine(it: { unit: string; totalUnits: number | null; unitSeconds: number | null }, override: number | null) {
+  const total = override ?? it.totalUnits;
+  if (total == null) return null;
+  const mins = totalMinutes(it as Parameters<typeof totalMinutes>[0], override);
+  switch (it.unit) {
+    case "watch":
+      return mins ? formatMinutes(mins) : null;
+    case "episode":
+      return `${total} episodes${it.unitSeconds ? ` · ${Math.round(it.unitSeconds / 60)} min each` : ""}`;
+    case "chapter":
+      return `${total} chapters`;
+    case "page":
+      return `${total} pages`;
+    case "minute":
+      return `About ${formatMinutes(total)} to finish`;
+    default:
+      return null;
+  }
+}

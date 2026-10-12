@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { CATEGORIES, SOURCES } from "@/db/schema";
+import { CATEGORIES, SOURCES, STATUSES } from "@/db/schema";
+import { changeStatus } from "@/lib/entries";
 import { addFromRef, addManual } from "@/lib/library";
 import { requireUser } from "@/lib/session";
 
@@ -27,6 +28,24 @@ export async function addToLibrary(input: unknown): Promise<AddResult> {
   } catch {
     return { ok: false, error: "Could not reach the source for that item. Try again in a moment." };
   }
+}
+
+/** Adds a title from its details page and sets where it stands in one go: "want", "in progress" or "done". */
+export async function addWithStatus(input: unknown, status: string): Promise<{ ok: false; error: string }> {
+  const { user } = await requireUser();
+  const ref = refSchema.safeParse(input);
+  const st = z.enum(STATUSES).safeParse(status);
+  if (!ref.success || !st.success) return { ok: false, error: "That item could not be read." };
+  let entryId: string;
+  try {
+    ({ entryId } = await addFromRef(user.id, ref.data));
+    if (st.data !== "want") await changeStatus(user.id, entryId, st.data);
+  } catch {
+    return { ok: false, error: "Could not reach the source for that item. Try again in a moment." };
+  }
+  revalidatePath("/library");
+  revalidatePath("/");
+  redirect(`/item/${entryId}${st.data === "done" ? "?rate=1" : ""}`);
 }
 
 const num = z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().min(0).max(100000).nullable());
