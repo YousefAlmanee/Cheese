@@ -18,8 +18,8 @@ const FIELDS = `
 const SEARCH = `query ($q: String) { Page(perPage: 8) { media(search: $q, sort: SEARCH_MATCH) { ${FIELDS} } } }`;
 const BY_ID = `query ($id: Int) { Media(id: $id) { ${FIELDS} } }`;
 const POPULAR = `query {
-  anime: Page(perPage: 8) { media(sort: TRENDING_DESC, type: ANIME) { ${FIELDS} } }
-  manga: Page(perPage: 4) { media(sort: TRENDING_DESC, type: MANGA) { ${FIELDS} } }
+  anime: Page(perPage: 8) { media(sort: TRENDING_DESC, type: ANIME, isAdult: false, genre_not_in: ["Ecchi", "Hentai"]) { ${FIELDS} } }
+  manga: Page(perPage: 4) { media(sort: TRENDING_DESC, type: MANGA, isAdult: false, genre_not_in: ["Ecchi", "Hentai"]) { ${FIELDS} } }
 }`;
 
 type Media = {
@@ -94,7 +94,8 @@ export const anilist: Provider = {
 
   async popular(signal) {
     const data = await gql<{ anime: { media: Media[] }; manga: { media: Media[] } }>(POPULAR, {}, signal);
-    return [...data.anime.media, ...data.manga.media].map(mediaDraft);
+    // Ecchi and hentai stay searchable but never get suggested.
+    return [...data.anime.media, ...data.manga.media].filter((m) => !m.genres?.some((g) => /^(ecchi|hentai)$/i.test(g))).map(mediaDraft);
   },
 
   async details(ref: Ref, signal) {
