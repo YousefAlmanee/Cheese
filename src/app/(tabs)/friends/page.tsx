@@ -133,6 +133,14 @@ export default async function FriendsPage({ searchParams }: { searchParams: Prom
                 </Link>
               </section>
 
+              {view.totalCommon > 0 && (
+                <section>
+                  <Link className="ch-btn ch-btn--ghost ch-btn--block" href={`/friends/group/${selected.id}/swipe`}>
+                    Swipe to pick together
+                  </Link>
+                </section>
+              )}
+
               {nights.length > 0 && (
                 <section className="sec">
                   <p className="ch-overline">Coming up</p>
