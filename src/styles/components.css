@@ -162,6 +162,11 @@ button { cursor: pointer; }
 .ch-skel--cover { width: 40px; aspect-ratio: 2 / 3; border-radius: var(--radius-xs); }
 .ch-skel--pill { height: 36px; width: 64px; border-radius: var(--radius-pill); }
 @media (prefers-reduced-motion: reduce) { .ch-skel { animation: none; } }
+.ch-swipe { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; touch-action: pan-y; cursor: grab; user-select: none; transition: transform 160ms ease-out, box-shadow 160ms ease-out; outline-offset: 3px; }
+.ch-swipe .ch-cover { aspect-ratio: 16 / 9; border-radius: 0; padding: var(--space-4); }
+.ch-swipe__body { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); }
+.ch-swipe--yes { box-shadow: 0 0 0 3px var(--accent-text); }
+.ch-swipe--no { box-shadow: 0 0 0 3px var(--border-control); }
 .ch-lrow { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; min-height: 64px; padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
 .ch-lrow:last-child { border-bottom: 0; }
 .ch-lrow .ch-cover { width: 40px; border-radius: var(--radius-xs); padding: 0; }

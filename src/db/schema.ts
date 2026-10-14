@@ -251,6 +251,21 @@ export const groupMember = pgTable(
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_member_user_idx").on(t.userId)],
 );
 
+/* ---------- Swipe to pick ---------- */
+
+// One member's yes or no on one item of a group's common list.
+export const groupSwipe = pgTable(
+  "group_swipe",
+  {
+    groupId: uuid("group_id").notNull().references(() => friendGroup.id, { onDelete: "cascade" }),
+    userId: userRef("user_id"),
+    itemId: uuid("item_id").notNull().references(() => item.id, { onDelete: "cascade" }),
+    liked: boolean("liked").notNull(),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId, t.itemId] }), index("group_swipe_group_item_idx").on(t.groupId, t.itemId)],
+);
+
 /* ---------- Nights (group plans with time votes) ---------- */
 
 export const night = pgTable(

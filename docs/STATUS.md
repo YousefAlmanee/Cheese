@@ -23,7 +23,9 @@ This project was built in an environment that could not reach the outside world,
 
 ## Left for Version 2
 
-Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+Streaks, weekly recap, stats and year in review, estimated finish dates, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+
+- **Swipe to pick as a group.** Friends shows "Swipe to pick together" for a group with things in common. The deck is the group's common list. Each member answers yes or no on their own time (drag the card, use the arrow keys, or tap a button; answers are saved one card at a time). Results list what got a yes, everyone-said-yes first, with a "Plan" link into the night form. Names are shown only for yes, never for no. When the last yes makes an item unanimous the others are notified once. "Start over" clears only your own answers. New table `group_swipe`.
 
 ## Known limits
 
