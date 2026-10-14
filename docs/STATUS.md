@@ -23,7 +23,11 @@ This project was built in an environment that could not reach the outside world,
 
 ## Left for Version 2
 
-Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+Streaks, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+
+## Added since Version 1
+
+- **Weekly recap.** On Sunday from 18:00 (the person's own timezone), anyone with activity that week gets one "Your week" notification: time logged, titles finished and planned sessions kept. It appears in the app's notifications and, where reminders are on, as a push. It runs inside the existing reminder job, is sent at most once a week per person, and can be turned off in Settings. The same numbers are on the `/recap` screen. Tested with sample data only, like the other pushes.
 
 ## Known limits
 
