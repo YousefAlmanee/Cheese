@@ -140,3 +140,20 @@ test("a new account sees an invitation, not a blank screen", async ({ page }) =>
   await expect(page.getByRole("link", { name: "Add something" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Pick for me" })).toHaveCount(0);
 });
+
+test("Home shows the weekly streak once there is one, and nudges when this week is empty", async ({ page }) => {
+  const { me } = await signedInWithLibrary(page);
+  await page.goto("/");
+  await expect(page.getByTestId("streak")).toHaveCount(0);
+
+  // Activity last week only: the streak stands at 1 and asks for something this week.
+  await db.insert(progressLog).values({ userId: me, at: new Date(Date.now() - 7 * 24 * 3600_000), deltaUnits: 1, minutes: 30 });
+  await page.goto("/");
+  await expect(page.getByTestId("streak")).toContainText("1-week streak");
+  await expect(page.getByTestId("streak")).toContainText("Log something this week");
+
+  await db.insert(progressLog).values({ userId: me, deltaUnits: 1, minutes: 30 });
+  await page.goto("/");
+  await expect(page.getByTestId("streak")).toContainText("2-week streak");
+  await expect(page.getByTestId("streak")).not.toContainText("Log something");
+});

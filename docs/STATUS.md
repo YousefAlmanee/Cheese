@@ -25,6 +25,8 @@ This project was built in an environment that could not reach the outside world,
 
 Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
 
+- **Weekly streak with freezes.** Home shows "N-week streak" once there is one. A week (Monday to Sunday, the person's timezone) counts if they logged time or finished a title. The week in progress never breaks the streak. Every 4 counted weeks in a row earns a freeze (up to 2); a missed week spends one and keeps the streak without adding to it. Worked out from existing history, no new tables.
+
 ## Known limits
 
 - No rate limiting. Fine for a group of friends, worth adding before opening it to the public.
