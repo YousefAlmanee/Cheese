@@ -23,7 +23,9 @@ This project was built in an environment that could not reach the outside world,
 
 ## Left for Version 2
 
-Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, new-episode alerts, rewatch logs, data export, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+
+- **Recommend to a friend.** An item has "Recommend to a friend": tick friends, add a note of up to 200 characters. They get a notification and a "Recommended to you" list on Friends with Add and Dismiss. Only friends, only your own items that are not hidden, once per item per friend (even after they dismiss it). Friends who already have it are not offered it. New table `recommendation`.
 
 ## Known limits
 

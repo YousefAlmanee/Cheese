@@ -84,6 +84,11 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
         <Link className="ch-btn ch-btn--primary ch-btn--block" href={`/plan/book?entry=${e.id}`}>
           Book a time
         </Link>
+        {!e.hidden && (
+          <Link className="ch-btn ch-btn--ghost ch-btn--block" href={`/item/${e.id}/recommend`} style={{ marginTop: "var(--space-2)" }}>
+            Recommend to a friend
+          </Link>
+        )}
       </section>
       <RemoveButton entryId={e.id} />
     </>
