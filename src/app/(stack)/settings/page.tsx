@@ -47,6 +47,17 @@ export default async function SettingsPage() {
         </Link>
       </section>
 
+      <section className="sec">
+        <p className="ch-overline">Your data</p>
+        <p className="hint">Take your list, ratings, time log and plans with you. Hidden items are included, because it is all yours.</p>
+        <a className="ch-btn ch-btn--ghost ch-btn--block" href="/api/export" download>
+          Download everything (JSON)
+        </a>
+        <a className="ch-btn ch-btn--ghost ch-btn--block" href="/api/export?format=csv" download>
+          Download your library (CSV)
+        </a>
+      </section>
+
       <section>
         <SignOutButton />
       </section>
