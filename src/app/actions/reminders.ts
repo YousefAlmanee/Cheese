@@ -39,6 +39,14 @@ export async function saveReminderLead(minutes: number): Promise<{ ok: boolean; 
   return { ok: true };
 }
 
+export async function saveRecapEnabled(enabled: boolean): Promise<{ ok: boolean }> {
+  const { user } = await requireUser();
+  if (typeof enabled !== "boolean") return { ok: false };
+  await db.update(profile).set({ recapEnabled: enabled }).where(eq(profile.userId, user.id));
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
 export async function sendTestReminder(): Promise<{ ok: boolean; message: string }> {
   const { user } = await requireUser();
   if (!pushConfigured()) return { ok: false, message: "Reminders are not set up on this server yet." };
