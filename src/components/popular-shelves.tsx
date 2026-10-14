@@ -83,6 +83,9 @@ export function PopularShelves({ category }: { category?: Category }) {
 
   return (
     <div className="stack">
+      {data.unavailable.length > 0 && (
+        <p className="hint">Popular {data.unavailable.map((c) => CATEGORY_PLURAL[c].toLowerCase()).join(", ")} are not set up on this server yet.</p>
+      )}
       {groups.map(({ c, items }) => (
         <section className="sec" key={c}>
           <p className="ch-overline">{CATEGORY_PLURAL[c]}</p>
