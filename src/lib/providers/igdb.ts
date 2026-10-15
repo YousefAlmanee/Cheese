@@ -80,7 +80,7 @@ export const igdb: Provider = {
     // Well-known games: a real cover, a base game (not a port/DLC), and enough ratings to be recognisable.
     const games = await query<Game[]>(
       "games",
-      `${FIELDS} where cover != null & version_parent = null & category = 0 & total_rating_count > 80; sort total_rating_count desc; limit 12;`,
+      `${FIELDS} where cover != null & version_parent = null & game_type = 0 & total_rating_count > 80; sort total_rating_count desc; limit 12;`,
       signal,
     );
     return games.map((g) => gameDraft(g, null));

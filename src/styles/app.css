@@ -28,6 +28,8 @@ a { color: inherit; }
 .error { font: 700 13px/18px var(--font-sans); color: var(--accent-text); margin: 0; }
 
 /* Fixed tab bar that follows the app column */
+.ch-tab-add__label { display: none; }
+.ch-tabbar--desk { display: none; }
 .ch-tabbar {
   position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 520px; z-index: 10;
   height: auto; min-height: calc(var(--size-tabbar) + env(safe-area-inset-bottom, 0px));
@@ -117,13 +119,30 @@ input:focus-visible + .adjust-opt { outline: 2px solid var(--focus); outline-off
   }
   .ch-tab { flex: none; flex-direction: row; justify-content: flex-start; gap: var(--space-3); padding: 0 var(--space-3); border-radius: var(--radius-md); font-size: 15px; line-height: 20px; }
   .ch-tab:hover { background: var(--surface); }
-  .ch-tab-add { order: -1; margin: 0 0 var(--space-3) var(--space-3); }
+  .ch-tabbar.ch-tabbar--desk { display: flex; }
+  .ch-tab-add { order: -1; width: auto; height: 44px; border-radius: var(--radius-pill, 999px); margin: 0 0 var(--space-3); padding: 0 var(--space-3); display: flex; align-items: center; justify-content: center; gap: var(--space-2); font: 700 15px/20px var(--font-sans); }
+  .ch-tab-add__label { display: inline; }
+  .ch-tab-add:hover { filter: brightness(1.06); }
 
   /* Rows that swipe on a phone become wrapping grids, since a mouse has no swipe. */
-  .ch-tile-row { flex-wrap: wrap; overflow: visible; scroll-snap-type: none; gap: var(--space-4) var(--space-4); --tile-w: 140px; }
+  .ch-tile-row { flex-wrap: wrap; overflow: visible; scroll-snap-type: none; gap: var(--space-4) var(--space-4); --tile-w: 150px; }
   .ch-tile-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .ch-chips { flex-wrap: wrap; overflow: visible; padding-inline: var(--space-6); }
   .ch-ptr { display: none; }
+}
+
+/* Mouse users get a hover cue on tiles; touch devices and reduced-motion users do not. */
+@media (min-width: 900px) and (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ch-tile { transition: transform .15s ease; }
+  .ch-tile:hover { transform: translateY(-2px); }
+}
+
+/* Wide desktops: a roomier column, with the sidebar kept flush to its left edge. */
+@media (min-width: 1200px) {
+  body:has(.ch-tabbar) .app { max-width: 1280px; padding-left: 256px; }
+  .ch-tabbar { left: max(0px, calc(50% - 640px)); width: 240px; }
+  .ch-tile-row { --tile-w: 160px; }
+  .ch-tile-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
 
 /* Popular suggestions sit under the person's own list, set apart by a rule so the two never read as one. */

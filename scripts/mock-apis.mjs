@@ -52,6 +52,12 @@ const anilistMedia = (e, type) => {
 
 const routes = [
   [/api\.themoviedb\.org\/3\/search\/multi\?query=([^&]*)/, (m) => json(tmdbSearch(decodeURIComponent(m[1])))],
+  [/api\.themoviedb\.org\/3\/trending\/all\/week/, () => json({
+    results: CATALOG.flatMap((e) => [
+      e.movie && { id: e.movie.id, media_type: "movie", title: e.title, release_date: e.movie.year, poster_path: null, overview: `${e.title} (sample data).` },
+      e.tv && { id: e.tv.id, media_type: "tv", name: e.title, first_air_date: e.tv.year, poster_path: null },
+    ]).filter(Boolean),
+  })],
   [/api\.themoviedb\.org\/3\/movie\/(\d+)/, (m) => {
     const e = CATALOG.find((c) => c.movie?.id === Number(m[1]));
     return e ? json({ id: e.movie.id, title: e.title, release_date: e.movie.year, runtime: e.movie.runtime, overview: `${e.title} (sample data).`, genres: [{ name: "Drama" }], credits: { crew: [{ job: "Director", name: e.movie.director }] } }) : json({}, 404);
@@ -62,6 +68,10 @@ const routes = [
   }],
   [/graphql\.anilist\.co/, async (_m, init) => {
     const { query, variables } = JSON.parse(init.body);
+    if (query.includes("anime: Page(")) {
+      const pick = (t) => ({ media: CATALOG.filter((e) => e[t]).map((e) => anilistMedia(e, t)) });
+      return json({ data: { anime: pick("anime"), manga: pick("manga") } });
+    }
     if (query.includes("Page(")) {
       const media = find(variables.q).flatMap((e) => [e.anime && anilistMedia(e, "anime"), e.manga && anilistMedia(e, "manga")]).filter(Boolean);
       return json({ data: { Page: { media } } });
@@ -69,6 +79,7 @@ const routes = [
     for (const e of CATALOG) for (const t of ["anime", "manga"]) if (e[t]?.id === variables.id) return json({ data: { Media: anilistMedia(e, t) } });
     return json({ errors: [{ message: "Not Found." }] }, 404);
   }],
+  [/openlibrary\.org\/trending\/weekly\.json/, () => json({ works: CATALOG.filter((e) => e.book).map((e) => ({ key: `/works/${e.book.id}`, title: e.title, author_name: [e.book.author], first_publish_year: e.book.year, cover_i: 1, number_of_pages_median: e.book.pages, subject: ["Science fiction"] })) })],
   [/openlibrary\.org\/search\.json\?q=([^&]*)/, (m) => json({ docs: find(decodeURIComponent(m[1])).filter((e) => e.book).map((e) => ({ key: `/works/${e.book.id}`, title: e.title, author_name: [e.book.author], first_publish_year: e.book.year, cover_i: null, number_of_pages_median: e.book.pages, subject: ["Science fiction"] })) })],
   [/openlibrary\.org\/works\/(OL\w+)\/editions\.json/, (m) => { const e = CATALOG.find((c) => c.book?.id === m[1]); return json({ entries: e ? [{ number_of_pages: e.book.pages }] : [] }); }],
   [/openlibrary\.org\/works\/(OL\w+)\.json/, (m) => { const e = CATALOG.find((c) => c.book?.id === m[1]); return e ? json({ title: e.title, description: `${e.title} (sample data).`, subjects: ["Science fiction"], first_publish_date: String(e.book.year), authors: [{ author: { key: "/authors/OL1A" } }] }) : json({}, 404); }],
@@ -83,6 +94,7 @@ const routes = [
   [/api\.igdb\.com\/v4\/games/, async (_m, init) => {
     const body = String(init.body);
     const toGame = (e) => ({ id: e.game.id, name: e.title, first_release_date: Date.UTC(e.game.year, 5, 1) / 1000, summary: `${e.title} (sample data).`, genres: [{ name: "Adventure" }], platforms: e.game.platforms.map((name) => ({ name })), involved_companies: [{ developer: true, company: { name: e.game.dev } }] });
+    if (/sort total_rating_count/.test(body)) return json(CATALOG.filter((e) => e.game).map(toGame));
     const search = body.match(/search "([^"]*)"/);
     if (search) return json(find(search[1]).filter((e) => e.game).map(toGame));
     const id = Number(body.match(/where id = (\d+)/)?.[1]);

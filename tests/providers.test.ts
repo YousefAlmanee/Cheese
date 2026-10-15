@@ -289,6 +289,17 @@ describe("IGDB", () => {
     expect(d.totalUnits).toBeNull();
   });
 
+  it("asks for well-rated base games when listing popular titles", async () => {
+    vi.stubEnv("TWITCH_CLIENT_ID", "cid");
+    vi.stubEnv("TWITCH_CLIENT_SECRET", "sec");
+    mockFetch(igdbRoutes());
+    const games = await igdb.popular!(signal());
+    expect(games[0]).toMatchObject({ category: "game", source: "igdb", title: "Elden Ring" });
+    const body = String(calls.find((c) => c.url.endsWith("/games"))!.init?.body);
+    expect(body).toContain("game_type = 0");
+    expect(body).toContain("sort total_rating_count desc");
+  });
+
   it("does not let a trailing backslash escape the closing quote", async () => {
     vi.stubEnv("TWITCH_CLIENT_ID", "cid");
     vi.stubEnv("TWITCH_CLIENT_SECRET", "sec");
