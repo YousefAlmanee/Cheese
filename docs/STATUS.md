@@ -27,6 +27,8 @@ Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-t
 
 - **Data export.** Settings has a "Your data" section: everything as JSON, and the library as CSV. It holds the person's own list (hidden items too), ratings, time log, planned sessions and free time. It leaves out the calendar link, invite code, push devices and anything about other people. Spreadsheet formulas in titles are defused in the CSV.
 
+- **Weekly streak with freezes.** Home shows "N-week streak" once there is one. A week (Monday to Sunday, the person's timezone) counts if they logged time or finished a title. The week in progress never breaks the streak. Every 4 counted weeks in a row earns a freeze (up to 2); a missed week spends one and keeps the streak without adding to it. Worked out from existing history, no new tables.
+
 ## Known limits
 
 - No rate limiting. Fine for a group of friends, worth adding before opening it to the public.

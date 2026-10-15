@@ -10,6 +10,7 @@ import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import { loadHome } from "@/lib/home";
 import { unreadCount } from "@/lib/notifications";
 import { percent, shortProgress } from "@/lib/progress";
+import { loadStreak, streakLine } from "@/lib/streak";
 import { requireUser } from "@/lib/session";
 import { hoursLabel } from "@/lib/time";
 import { SubmitButton } from "@/components/submit-button";
@@ -20,8 +21,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const { user, profile } = await requireUser();
   const sp = await searchParams;
   const category = CATEGORIES.includes(sp.category as Category) ? (sp.category as Category) : undefined;
-  const home = await loadHome(user.id, profile.timezone, profile.weeklyGoalMinutes, category);
-  const unread = await unreadCount(user.id);
+  const [home, unread, streak] = await Promise.all([
+    loadHome(user.id, profile.timezone, profile.weeklyGoalMinutes, category),
+    unreadCount(user.id),
+    loadStreak(user.id, profile.timezone),
+  ]);
   const { spotlight: spot, more } = home;
   const tab = (c: Category | undefined) => (c ? `/?category=${c}` : "/");
 
@@ -53,6 +57,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </Link>
         ))}
       </div>
+
+      {streak.current > 0 && (
+        <p className="ch-streak" data-testid="streak">
+          <b>{streakLine(streak)}</b>
+          {!streak.activeThisWeek && <span> · Log something this week to keep it going.</span>}
+        </p>
+      )}
 
       {!spot ? (
         <section>
