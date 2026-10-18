@@ -226,7 +226,8 @@ export const friendship = pgTable(
   (t) => [
     uniqueIndex("friendship_pair_uq").on(t.userLow, t.userHigh),
     index("friendship_high_idx").on(t.userHigh),
-    check("friendship_order", sql`${t.userLow} < ${t.userHigh}`),
+    // Byte-wise, like the JavaScript `<` that orders the pair. The database default collation can sort mixed-case ids differently.
+    check("friendship_order", sql`${t.userLow} collate "C" < ${t.userHigh} collate "C"`),
   ],
 );
 
