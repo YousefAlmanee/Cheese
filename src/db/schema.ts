@@ -59,6 +59,9 @@ export const profile = pgTable(
     weeklyGoalMinutes: integer("weekly_goal_minutes").notNull().default(360),
     // How long before a session a reminder is sent. 0 turns reminders off.
     reminderLeadMin: smallint("reminder_lead_min").notNull().default(30),
+    // The Sunday-evening weekly recap. lastRecapAt is when the latest one was sent, so a week never gets two.
+    recapEnabled: boolean("recap_enabled").notNull().default(true),
+    lastRecapAt: tz("last_recap_at"),
     timezone: text("timezone").notNull().default("UTC"),
     icsToken: text("ics_token").notNull().unique(),
     inviteCode: text("invite_code").notNull().unique(),
