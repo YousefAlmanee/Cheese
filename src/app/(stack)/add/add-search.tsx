@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { addToLibrary } from "@/app/actions/library";
+import { addAsDone, addToLibrary } from "@/app/actions/library";
 import { CategoryTag, StatusBadge } from "@/components/badges";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { discoverHref } from "@/lib/discover";
 import { PopularShelves } from "@/components/popular-shelves";
 import { CATEGORIES, type Category, type Status } from "@/db/schema";
-import { CATEGORY_LABEL, CATEGORY_PLURAL, formatMinutes, totalMinutes } from "@/lib/length";
+import { CATEGORY_LABEL, CATEGORY_PLURAL, DONE_LABEL, formatMinutes, totalMinutes } from "@/lib/length";
 import type { ItemDraft } from "@/lib/providers/types";
 
 type Response = {
@@ -92,6 +92,23 @@ export function AddSearch() {
     });
   }
 
+  function markDone(h: ItemDraft) {
+    const k = key(h);
+    if (!h.externalId || h.source === "manual") return;
+    setPending((p) => new Set(p).add(k));
+    setErrors((e) => ({ ...e, [k]: "" }));
+    startTransition(async () => {
+      const res = await addAsDone({ source: h.source, externalId: h.externalId, category: h.category });
+      setPending((p) => {
+        const n = new Set(p);
+        n.delete(k);
+        return n;
+      });
+      if (res.ok) setAdded((a) => ({ ...a, [k]: { entryId: res.entryId, status: "done" } }));
+      else setErrors((e) => ({ ...e, [k]: res.error }));
+    });
+  }
+
   const inLib = { ...(data?.inLibrary ?? {}), ...added };
 
   return (
@@ -161,21 +178,34 @@ export function AddSearch() {
                         </>
                       );
                     })()}
-                    {existing ? (
-                      <Link href={`/item/${existing.entryId}`} aria-label={`Open ${h.title}`}>
-                        <StatusBadge status={existing.status} />
-                      </Link>
-                    ) : (
-                      <button
-                        className="ch-btn ch-btn--pill"
-                        onClick={() => add(h)}
-                        disabled={pending.has(k)}
-                        aria-label={`Add ${h.title} (${CATEGORY_LABEL[h.category]})`}
-                      >
-                        <Icon name="plus" small />
-                        {pending.has(k) ? "Adding" : "Add"}
-                      </button>
-                    )}
+                    <div className="row" style={{ gap: "var(--space-2)", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {existing ? (
+                        <Link href={`/item/${existing.entryId}`} aria-label={`Open ${h.title}`}>
+                          <StatusBadge status={existing.status} />
+                        </Link>
+                      ) : (
+                        <button
+                          className="ch-btn ch-btn--pill"
+                          onClick={() => add(h)}
+                          disabled={pending.has(k)}
+                          aria-label={`Add ${h.title} (${CATEGORY_LABEL[h.category]})`}
+                        >
+                          <Icon name="plus" small />
+                          {pending.has(k) ? "Adding" : "Add"}
+                        </button>
+                      )}
+                      {existing?.status !== "done" && (
+                        <button
+                          className="ch-btn ch-btn--pill ch-btn--ghost"
+                          onClick={() => markDone(h)}
+                          disabled={pending.has(k)}
+                          aria-label={`${DONE_LABEL[h.category]}: ${h.title} (${CATEGORY_LABEL[h.category]})`}
+                        >
+                          <Icon name="check" small />
+                          {DONE_LABEL[h.category]}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

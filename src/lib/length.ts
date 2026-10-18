@@ -27,6 +27,16 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   game: "Game",
 };
 
+/** The one-word past tense for "I finished this", per category. */
+export const DONE_LABEL: Record<Category, string> = {
+  movie: "Watched",
+  series: "Watched",
+  anime: "Watched",
+  manga: "Read",
+  book: "Read",
+  game: "Played",
+};
+
 export const CATEGORY_PLURAL: Record<Category, string> = {
   movie: "Movies",
   series: "Series",
