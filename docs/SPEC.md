@@ -24,7 +24,7 @@ Status: planning complete, not built yet.
 
 - Me and my friends. A small private group, not a public social network.
 - Used mostly on the phone. Built as a responsive web app that can be added to the home screen (needed for reminders).
-- Everyone starts fresh. No importing from other apps.
+- Everyone starts fresh, except that movies can be imported from a Letterboxd export (Settings).
 
 ## 3. Categories and data sources
 
@@ -100,7 +100,7 @@ Items are added by searching an API, with manual entry as a fallback. No scrapin
 - A cap on how many things can be in progress
 - In-app chat (WhatsApp does this)
 - Synced remote watching
-- Importing from other apps
+- Importing from apps other than Letterboxd
 
 ## 6. Screens
 

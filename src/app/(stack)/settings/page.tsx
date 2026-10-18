@@ -3,6 +3,8 @@ import { saveProfile } from "@/app/actions/friends";
 import { ActionForm } from "@/components/form-field";
 import { Icon } from "@/components/icons";
 import { requireUser } from "@/lib/session";
+import { LetterboxdImport } from "./letterboxd-import";
+import { RecapSettings } from "./recap-settings";
 import { ReminderSettings } from "./reminder-settings";
 import { SignOutButton } from "./sign-out";
 
@@ -41,6 +43,11 @@ export default async function SettingsPage() {
       </section>
 
       <section className="sec">
+        <p className="ch-overline">Weekly recap</p>
+        <RecapSettings enabled={profile.recapEnabled} />
+      </section>
+
+      <section className="sec">
         <p className="ch-overline">Time</p>
         <Link className="ch-btn ch-btn--ghost ch-btn--block" href="/plan/setup">
           Free time, weekly goal and calendar
@@ -56,6 +63,11 @@ export default async function SettingsPage() {
         <a className="ch-btn ch-btn--ghost ch-btn--block" href="/api/export?format=csv" download>
           Download your library (CSV)
         </a>
+      </section>
+
+      <section className="sec">
+        <p className="ch-overline">Import from Letterboxd</p>
+        <LetterboxdImport />
       </section>
 
       <section>

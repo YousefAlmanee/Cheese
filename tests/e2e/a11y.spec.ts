@@ -4,7 +4,9 @@ import { DateTime } from "luxon";
 import { db } from "@/db";
 import { freeWindow, planSession } from "@/db/schema";
 import { createGroup, respondToRequest, sendFriendRequest } from "@/lib/friends";
+import { addEntry, upsertItem } from "@/lib/library";
 import { createNight, nightForMember, toggleVote } from "@/lib/nights";
+import { recommend } from "@/lib/recommendations";
 import { resetDb, makeUser } from "../helpers";
 import { seedDemo, userIdByName } from "../seed";
 import { signIn } from "./helpers";
@@ -30,6 +32,10 @@ for (const scheme of ["light", "dark"] as const) {
       await sendFriendRequest(me, sara.profile.username);
       await respondToRequest(sara.id, me, true);
       await seedDemo(sara.id);
+      // Something only Sara has, recommended to me, so the "Recommended to you" list is on the Friends screen.
+      const parasite = await upsertItem({ category: "movie", source: "tmdb", externalId: "movie/496243", title: "Parasite", creator: "Bong Joon-ho", year: 2019, coverUrl: null, summary: null, unit: "watch", totalUnits: 1, unitSeconds: 132 * 60, genres: [], platforms: [] });
+      await addEntry(sara.id, parasite.id);
+      await recommend(sara.id, parasite.id, [me], "Trust me");
       const g = await createGroup(me, "Movie nights", [sara.id]);
       if (!g.ok) throw new Error(g.error);
       const inter = (await db.query.item.findFirst({ where: (t, { eq }) => eq(t.externalId, "movie/157336") }))!;
@@ -39,11 +45,11 @@ for (const scheme of ["light", "dark"] as const) {
       await toggleVote({ nightId: made.id, userId: sara.id }, nv.options[0].id);
 
       const pages = [
-        "/", "/library", "/library?status=in_progress", `/item/${seeded["Frieren"].id}`, `/item/${seeded["Spirited Away"].id}`,
+        "/", "/library", "/library?status=in_progress", `/item/${seeded["Frieren"].id}`, `/item/${seeded["Spirited Away"].id}`, `/item/${seeded["Frieren"].id}/recommend`,
         "/add", "/add/manual", "/fit?minutes=90", "/pick", `/plan?day=${day}`, "/plan/setup", `/plan/book?day=${day}&start=19:00&gap=90`,
         `/plan/session/${session.id}`, `/friends?group=${g.id}`, "/friends/people", "/friends/add", `/friends/u/${sara.profile.username}`,
-        `/friends/item/${inter.id}?group=${g.id}`, "/friends/group/new", `/friends/group/${g.id}`, `/night/new?group=${g.id}&item=${inter.id}`,
-        `/night/${made.id}`, `/n/${nv.night.publicToken}`, "/settings",
+        `/friends/item/${inter.id}?group=${g.id}`, "/friends/group/new", `/friends/group/${g.id}/swipe`, `/friends/group/${g.id}`, `/night/new?group=${g.id}&item=${inter.id}`,
+        `/night/${made.id}`, `/n/${nv.night.publicToken}`, "/settings", "/recap",
       ];
       const problems: string[] = [];
       for (const url of pages) {

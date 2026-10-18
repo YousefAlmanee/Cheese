@@ -62,7 +62,7 @@ export async function sendToUser(userId: string, payload: PushPayload, ttlSec = 
   await Promise.all(
     subs.map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: ttlSec });
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: ttlSec, timeout: 5000 });
         sent++;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;

@@ -59,6 +59,9 @@ export const profile = pgTable(
     weeklyGoalMinutes: integer("weekly_goal_minutes").notNull().default(360),
     // How long before a session a reminder is sent. 0 turns reminders off.
     reminderLeadMin: smallint("reminder_lead_min").notNull().default(30),
+    // The Sunday-evening weekly recap. lastRecapAt is when the latest one was sent, so a week never gets two.
+    recapEnabled: boolean("recap_enabled").notNull().default(true),
+    lastRecapAt: tz("last_recap_at"),
     timezone: text("timezone").notNull().default("UTC"),
     icsToken: text("ics_token").notNull().unique(),
     inviteCode: text("invite_code").notNull().unique(),
@@ -226,7 +229,8 @@ export const friendship = pgTable(
   (t) => [
     uniqueIndex("friendship_pair_uq").on(t.userLow, t.userHigh),
     index("friendship_high_idx").on(t.userHigh),
-    check("friendship_order", sql`${t.userLow} < ${t.userHigh}`),
+    // Byte-wise, like the JavaScript `<` that orders the pair. The database default collation can sort mixed-case ids differently.
+    check("friendship_order", sql`${t.userLow} collate "C" < ${t.userHigh} collate "C"`),
   ],
 );
 
@@ -249,6 +253,42 @@ export const groupMember = pgTable(
     joinedAt: tz("joined_at").notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_member_user_idx").on(t.userId)],
+);
+
+/* ---------- Recommendations ---------- */
+
+// One friend telling another "you should try this". Kept after it is answered, so the same thing cannot be sent twice.
+export const recommendation = pgTable(
+  "recommendation",
+  {
+    id: id(),
+    fromUser: userRef("from_user"),
+    toUser: userRef("to_user"),
+    itemId: uuid("item_id").notNull().references(() => item.id, { onDelete: "cascade" }),
+    note: text("note"),
+    respondedAt: tz("responded_at"),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("recommendation_pair_item_uq").on(t.fromUser, t.toUser, t.itemId),
+    index("recommendation_to_idx").on(t.toUser, t.createdAt),
+    check("recommendation_not_self", sql`${t.fromUser} <> ${t.toUser}`),
+  ],
+);
+
+/* ---------- Swipe to pick ---------- */
+
+// One member's yes or no on one item of a group's common list.
+export const groupSwipe = pgTable(
+  "group_swipe",
+  {
+    groupId: uuid("group_id").notNull().references(() => friendGroup.id, { onDelete: "cascade" }),
+    userId: userRef("user_id"),
+    itemId: uuid("item_id").notNull().references(() => item.id, { onDelete: "cascade" }),
+    liked: boolean("liked").notNull(),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId, t.itemId] }), index("group_swipe_group_item_idx").on(t.groupId, t.itemId)],
 );
 
 /* ---------- Nights (group plans with time votes) ---------- */

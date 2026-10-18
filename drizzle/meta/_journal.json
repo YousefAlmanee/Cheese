@@ -22,6 +22,34 @@
       "when": 1791759421977,
       "tag": "0002_smooth_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792346936441,
+      "tag": "0003_friendship_order_c_collation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792346949637,
+      "tag": "0004_weekly_recap",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792346967009,
+      "tag": "0005_recommendations",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792346980482,
+      "tag": "0006_group_swipe",
+      "breakpoints": true
     }
   ]
 }
