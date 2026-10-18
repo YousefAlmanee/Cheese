@@ -43,6 +43,13 @@
       "when": 1792346967009,
       "tag": "0005_recommendations",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792346980482,
+      "tag": "0006_group_swipe",
+      "breakpoints": true
     }
   ]
 }

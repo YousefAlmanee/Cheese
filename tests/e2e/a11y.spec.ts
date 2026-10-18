@@ -48,7 +48,7 @@ for (const scheme of ["light", "dark"] as const) {
         "/", "/library", "/library?status=in_progress", `/item/${seeded["Frieren"].id}`, `/item/${seeded["Spirited Away"].id}`, `/item/${seeded["Frieren"].id}/recommend`,
         "/add", "/add/manual", "/fit?minutes=90", "/pick", `/plan?day=${day}`, "/plan/setup", `/plan/book?day=${day}&start=19:00&gap=90`,
         `/plan/session/${session.id}`, `/friends?group=${g.id}`, "/friends/people", "/friends/add", `/friends/u/${sara.profile.username}`,
-        `/friends/item/${inter.id}?group=${g.id}`, "/friends/group/new", `/friends/group/${g.id}`, `/night/new?group=${g.id}&item=${inter.id}`,
+        `/friends/item/${inter.id}?group=${g.id}`, "/friends/group/new", `/friends/group/${g.id}/swipe`, `/friends/group/${g.id}`, `/night/new?group=${g.id}&item=${inter.id}`,
         `/night/${made.id}`, `/n/${nv.night.publicToken}`, "/settings", "/recap",
       ];
       const problems: string[] = [];
