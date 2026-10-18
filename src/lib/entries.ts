@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { entry, item, progressLog, type Priority, type Status } from "@/db/schema";
 import { unitSeconds } from "./length";
@@ -87,3 +87,14 @@ export async function removeEntry(userId: string, entryId: string) {
   return res.length > 0;
 }
 
+
+/** Marks many of the person's own entries as open to doing together (or not) in one go. Returns how many changed. */
+export async function setTogetherMany(userId: string, entryIds: string[], together: boolean) {
+  if (entryIds.length === 0) return 0;
+  const res = await db
+    .update(entry)
+    .set({ together, updatedAt: new Date() })
+    .where(and(eq(entry.userId, userId), inArray(entry.id, entryIds)))
+    .returning({ id: entry.id });
+  return res.length;
+}
