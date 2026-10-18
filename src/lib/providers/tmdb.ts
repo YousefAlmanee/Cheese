@@ -132,3 +132,27 @@ export const tmdb: Provider = {
     return m[1] === "movie" ? movieDraft(data) : tvDraft(data);
   },
 };
+
+const normTitle = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Finds one film by title and year, for importing from other apps. Returns its TMDB id (`movie/123`) or null.
+ * With a year, only a release within a year of it counts. Without one, only an exact title match counts.
+ */
+export async function findMovie(title: string, year: number | null, signal: AbortSignal): Promise<string | null> {
+  const a = auth();
+  const url = `${BASE}/search/movie?query=${encodeURIComponent(title)}&include_adult=false&language=en-US${a.query}`;
+  const data = await fetchJson<{ results?: { id: number; title?: string; original_title?: string; release_date?: string }[] }>("TMDB", url, { headers: a.headers }, signal);
+  const want = normTitle(title);
+  const hits = (data.results ?? []).filter((r) => r.title);
+  const sameTitle = (r: (typeof hits)[number]) => normTitle(r.title!) === want || normTitle(r.original_title ?? "") === want;
+  const best =
+    year != null
+      ? hits.find((r) => sameTitle(r) && yearOf(r.release_date) === year) ??
+        hits.find((r) => {
+          const y = yearOf(r.release_date);
+          return y != null && Math.abs(y - year) <= 1 && sameTitle(r);
+        })
+      : hits.find(sameTitle);
+  return best ? `movie/${best.id}` : null;
+}

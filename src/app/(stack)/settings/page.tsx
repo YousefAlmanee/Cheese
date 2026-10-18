@@ -3,6 +3,7 @@ import { saveProfile } from "@/app/actions/friends";
 import { ActionForm } from "@/components/form-field";
 import { Icon } from "@/components/icons";
 import { requireUser } from "@/lib/session";
+import { LetterboxdImport } from "./letterboxd-import";
 import { ReminderSettings } from "./reminder-settings";
 import { SignOutButton } from "./sign-out";
 
@@ -56,6 +57,11 @@ export default async function SettingsPage() {
         <a className="ch-btn ch-btn--ghost ch-btn--block" href="/api/export?format=csv" download>
           Download your library (CSV)
         </a>
+      </section>
+
+      <section className="sec">
+        <p className="ch-overline">Import from Letterboxd</p>
+        <LetterboxdImport />
       </section>
 
       <section>

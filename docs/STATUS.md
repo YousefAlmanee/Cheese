@@ -23,7 +23,7 @@ This project was built in an environment that could not reach the outside world,
 
 ## Left for Version 2
 
-Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from other apps.
+Streaks, weekly recap, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from apps other than Letterboxd.
 
 - **Data export.** Settings has a "Your data" section: everything as JSON, and the library as CSV. It holds the person's own list (hidden items too), ratings, time log, planned sessions and free time. It leaves out the calendar link, invite code, push devices and anything about other people. Spreadsheet formulas in titles are defused in the CSV.
 
