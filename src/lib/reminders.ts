@@ -6,6 +6,7 @@ import { sendToUser } from "./push";
 import { timeLabel } from "./time";
 
 const GRACE_MS = 10 * 60_000;
+const BATCH = 10;
 
 /**
  * Sends a reminder for every session that is coming up within its owner's lead time and has not been reminded about.
@@ -29,13 +30,24 @@ export async function sendDueReminders(now = new Date()): Promise<{ due: number;
       ),
     );
 
-  let due = 0;
+  const inWindow = candidates.filter(({ s, lead }) => s.startsAt.getTime() - now.getTime() <= lead * 60_000); // the rest are not yet in this person's window
   let sent = 0;
-  for (const { s, zone, lead } of candidates) {
-    if (s.startsAt.getTime() - now.getTime() > lead * 60_000) continue; // not yet in this person's window
-    due++;
-    const [claimed] = await db.update(planSession).set({ remindedAt: now }).where(and(eq(planSession.id, s.id), sql`${planSession.remindedAt} is null`)).returning();
-    if (!claimed) continue; // another run took it
+  // A few at a time, so one slow push service cannot hold up everyone else's reminder.
+  for (let i = 0; i < inWindow.length; i += BATCH) {
+    const results = await Promise.allSettled(inWindow.slice(i, i + BATCH).map((c) => remind(c, now)));
+    for (const r of results) {
+      if (r.status === "fulfilled") sent += r.value ? 1 : 0;
+      else console.error("reminder failed", r.reason);
+    }
+  }
+  return { due: inWindow.length, sent };
+}
+
+/** Claims one session and sends its reminder. True when at least one device got it. */
+async function remind({ s, zone }: { s: typeof planSession.$inferSelect; zone: string }, now: Date): Promise<boolean> {
+  const [claimed] = await db.update(planSession).set({ remindedAt: now }).where(and(eq(planSession.id, s.id), sql`${planSession.remindedAt} is null`)).returning();
+  if (!claimed) return false; // another run took it
+  try {
     const mins = Math.max(0, Math.round((s.startsAt.getTime() - now.getTime()) / 60_000));
     // A reminder is worthless once the session has started, so an offline phone should not get it an hour late.
     const ttlSec = Math.min(60 * 60, Math.max(60, Math.round((s.startsAt.getTime() - now.getTime()) / 1000)));
@@ -49,8 +61,11 @@ export async function sendDueReminders(now = new Date()): Promise<{ due: number;
       },
       ttlSec,
     );
-    if (res.sent > 0) sent++;
-    else await db.update(planSession).set({ remindedAt: null }).where(eq(planSession.id, s.id));
+    if (res.sent > 0) return true;
+  } catch (e) {
+    console.error("reminder failed", e);
   }
-  return { due, sent };
+  // Nothing was delivered: release the claim so the next run tries again.
+  await db.update(planSession).set({ remindedAt: null }).where(eq(planSession.id, s.id));
+  return false;
 }

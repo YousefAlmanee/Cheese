@@ -169,6 +169,15 @@ describe("sendDueReminders", () => {
     vi.restoreAllMocks();
   });
 
+  it("sends more reminders than one batch holds", async () => {
+    for (let i = 0; i < 13; i++) {
+      const u = await subscribed(`Person${i}`);
+      await session(u.id, min(10));
+    }
+    expect(await sendDueReminders(NOW)).toEqual({ due: 13, sent: 13 });
+    expect(sent).toHaveLength(13);
+  });
+
   it("two runs at once send it only once", async () => {
     const u = await subscribed("Yousef");
     await session(u.id, min(10));
