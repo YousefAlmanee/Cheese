@@ -7,6 +7,8 @@ import { percent, shortProgress } from "@/lib/progress";
 import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import { libraryGenres, listLibrary, PAGE_SIZE, parseFilter, SORT_LABEL, SORTS, statusCounts, type LibraryFilter } from "@/lib/library-query";
 import { requireUser } from "@/lib/session";
+import { bulkTogether } from "@/app/actions/library";
+import { SelectAll } from "./select-all";
 import { shortDate } from "@/lib/time";
 
 export const metadata = { title: "Library" };
@@ -28,15 +30,34 @@ function href(f: LibraryFilter, over: Partial<Record<keyof LibraryFilter | "prio
   return s ? `/library?${s}` : "/library";
 }
 
+/** A tile that opens the item, or in select mode a tickable one. */
+function Wrapper({ selecting, id, title, children }: { selecting: boolean; id: string; title: string; children: React.ReactNode }) {
+  if (!selecting) {
+    return (
+      <Link href={`/item/${id}`} className="ch-tile" style={{ textDecoration: "none" }}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <label className="ch-tile" style={{ position: "relative", cursor: "pointer" }}>
+      <input type="checkbox" name="id" value={id} aria-label={`Select ${title}`} style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }} />
+      {children}
+    </label>
+  );
+}
+
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { user, profile } = await requireUser();
   const sp = await searchParams;
   const f = parseFilter(sp);
   const showSearch = sp.search === "1" || Boolean(f.q);
-  const shown = Math.min(Math.max(Number(Array.isArray(sp.n) ? sp.n[0] : sp.n) || PAGE_SIZE, PAGE_SIZE), 1000);
+  const selecting = sp.select === "1";
+  const shown = selecting ? 1000 : Math.min(Math.max(Number(Array.isArray(sp.n) ? sp.n[0] : sp.n) || PAGE_SIZE, PAGE_SIZE), 1000);
   const [{ rows, total }, counts, genres] = await Promise.all([listLibrary(user.id, f, shown), statusCounts(user.id), libraryGenres(user.id)]);
 
   const moreHref = href(f, {}).includes("?") ? `${href(f, {})}&` : `${href(f, {})}?`;
+  const selectHref = href(f, {}) + (href(f, {}).includes("?") ? "&" : "?") + "select=1";
   const heading = f.status ? STATUS_LABEL[f.status] : "Everything";
 
   return (
@@ -44,6 +65,11 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <header className="head">
         <h1 className="ch-title">Library</h1>
         <div className="head__end">
+          {rows.length > 0 && (
+            <Link className="ch-btn ch-btn--ghost" href={selecting ? href(f, {}) : selectHref}>
+              {selecting ? "Done" : "Select"}
+            </Link>
+          )}
           <Link className="iconbtn" href={showSearch ? href(f, { q: undefined }) : href(f, {}, true)} aria-label={showSearch ? "Close search" : "Search library"}>
             <Icon name={showSearch ? "x" : "search"} />
           </Link>
@@ -139,6 +165,22 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
             )}
           </div>
         ) : (
+          <form action={bulkTogether} className="stack">
+          {selecting && (
+            <div className="card stack" style={{ position: "sticky", top: 0, zIndex: 5 }}>
+              <input type="hidden" name="back" value={selectHref} />
+              <p className="hint">Tick what you want, then choose. Ticked items are open to doing together with friends.</p>
+              <div className="row" style={{ flexWrap: "wrap", gap: "var(--space-2)" }}>
+                <SelectAll label={`Select all ${rows.length}`} />
+                <button className="ch-btn ch-btn--primary" name="together" value="1">
+                  Mark together
+                </button>
+                <button className="ch-btn ch-btn--ghost" name="together" value="0">
+                  Mark not together
+                </button>
+              </div>
+            </div>
+          )}
           <div className="ch-tile-grid">
             {rows.map(({ entry: e, item: it }) => {
               const total = e.totalOverride ?? it.totalUnits;
@@ -151,7 +193,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                     ? ` · ${shortProgress(it.unit, e.progress)}`
                     : "";
               return (
-                <Link key={e.id} href={`/item/${e.id}`} className="ch-tile" style={{ textDecoration: "none" }}>
+                <Wrapper key={e.id} selecting={selecting} id={e.id} title={it.title}>
                   <Cover src={it.coverUrl} title={it.title} />
                   {showBar && (
                     <div className="ch-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${it.title} progress`}>
@@ -163,14 +205,16 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                     <div className="ch-tile__meta">
                       {CATEGORY_LABEL[it.category]}
                       {prog}
+                      {e.together ? " · Together" : ""}
                     </div>
                   </div>
-                </Link>
+                </Wrapper>
               );
             })}
           </div>
+          </form>
         )}
-        {total > rows.length && (
+        {!selecting && total > rows.length && (
           <Link className="ch-btn ch-btn--ghost ch-btn--block" href={`${moreHref}n=${rows.length + PAGE_SIZE}`} scroll={false}>
             Show more ({total - rows.length} left)
           </Link>
