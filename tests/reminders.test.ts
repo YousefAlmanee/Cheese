@@ -169,6 +169,15 @@ describe("sendDueReminders", () => {
     vi.restoreAllMocks();
   });
 
+  it("sends more reminders than one batch holds", async () => {
+    for (let i = 0; i < 13; i++) {
+      const u = await subscribed(`Person${i}`);
+      await session(u.id, min(10));
+    }
+    expect(await sendDueReminders(NOW)).toEqual({ due: 13, sent: 13 });
+    expect(sent).toHaveLength(13);
+  });
+
   it("two runs at once send it only once", async () => {
     const u = await subscribed("Yousef");
     await session(u.id, min(10));
@@ -207,6 +216,6 @@ describe("the cron endpoint", () => {
     await session(u.id, new Date(Date.now() + 10 * 60_000));
     const res = await call({ authorization: "Bearer s3cret-value" });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ due: 1, sent: 1 });
+    expect(await res.json()).toMatchObject({ due: 1, sent: 1, recaps: expect.any(Object) });
   });
 });
