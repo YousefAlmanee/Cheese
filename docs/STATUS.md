@@ -23,11 +23,13 @@ This project was built in an environment that could not reach the outside world,
 
 ## Left for Version 2
 
-Streaks, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, recommending an item to a friend, new-episode alerts, rewatch logs, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from apps other than Letterboxd.
+Streaks, stats and year in review, estimated finish dates, swipe-to-pick, spoiler-safe shared progress, activity feed and reactions, new-episode alerts, rewatch logs, writing group sessions into Google Calendar (today they appear in the calendar link), and importing from apps other than Letterboxd.
 
 - **Data export.** Settings has a "Your data" section: everything as JSON, and the library as CSV. It holds the person's own list (hidden items too), ratings, time log, planned sessions and free time. It leaves out the calendar link, invite code, push devices and anything about other people. Spreadsheet formulas in titles are defused in the CSV.
 
 - **Weekly streak with freezes.** Home shows "N-week streak" once there is one. A week (Monday to Sunday, the person's timezone) counts if they logged time or finished a title. The week in progress never breaks the streak. Every 4 counted weeks in a row earns a freeze (up to 2); a missed week spends one and keeps the streak without adding to it. Worked out from existing history, no new tables.
+
+- **Recommend to a friend.** An item has "Recommend to a friend": tick friends, add a note of up to 200 characters. They get a notification and a "Recommended to you" list on Friends with Add and Dismiss. Only friends, only your own items that are not hidden, once per item per friend (even after they dismiss it). Friends who already have it are not offered it. New table `recommendation`.
 
 ## Added since Version 1
 

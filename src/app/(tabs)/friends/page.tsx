@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { answerRequest } from "@/app/actions/friends";
+import { addRecommended, dismissRecommended } from "@/app/actions/recommend";
 import { Avatar, AvatarStack } from "@/components/avatars";
 import { CategoryTag } from "@/components/badges";
 import { Cover } from "@/components/cover";
@@ -7,6 +8,7 @@ import { Icon } from "@/components/icons";
 import { CATEGORIES, type Category } from "@/db/schema";
 import { loadGroupView } from "@/lib/common";
 import { listFriends, listGroups, listRequests } from "@/lib/friends";
+import { listReceived } from "@/lib/recommendations";
 import { CATEGORY_PLURAL, formatMinutes, totalMinutes } from "@/lib/length";
 import { upcomingNights } from "@/lib/nights";
 import { requireUser } from "@/lib/session";
@@ -20,7 +22,7 @@ type SP = { group?: string; category?: string; under?: string; platform?: string
 export default async function FriendsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const { user, profile } = await requireUser();
   const sp = await searchParams;
-  const [groups, friends, requests] = await Promise.all([listGroups(user.id), listFriends(user.id), listRequests(user.id)]);
+  const [groups, friends, requests, recommended] = await Promise.all([listGroups(user.id), listFriends(user.id), listRequests(user.id), listReceived(user.id)]);
 
   const selected = groups.find((g) => g.id === sp.group) ?? groups[0];
   const category = CATEGORIES.includes(sp.category as Category) ? (sp.category as Category) : undefined;
@@ -71,6 +73,30 @@ export default async function FriendsPage({ searchParams }: { searchParams: Prom
               </form>
             </div>
           ))}
+        </section>
+      )}
+
+      {recommended.length > 0 && (
+        <section className="sec">
+          <p className="ch-overline">Recommended to you</p>
+          <div className="ch-list ch-list--card">
+            {recommended.map((r) => (
+              <div className="ch-lrow" key={r.id} style={{ gridTemplateColumns: "auto 1fr auto auto" }}>
+                <Cover src={r.item.coverUrl} title={r.item.title} />
+                <div className="ch-lrow__body">
+                  <p className="ch-row-title">{r.item.title}</p>
+                  <p className="ch-lrow__meta">From {r.from.displayName}</p>
+                  {r.note && <p className="hint">&ldquo;{r.note}&rdquo;</p>}
+                </div>
+                <form action={addRecommended.bind(null, r.id)}>
+                  <SubmitButton className="ch-btn ch-btn--pill is-accent" aria-label={`Add ${r.item.title} to my list`}>Add</SubmitButton>
+                </form>
+                <form action={dismissRecommended.bind(null, r.id)}>
+                  <SubmitButton className="ch-btn ch-btn--pill" aria-label={`Dismiss ${r.item.title}`}>Dismiss</SubmitButton>
+                </form>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

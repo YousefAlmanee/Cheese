@@ -255,6 +255,27 @@ export const groupMember = pgTable(
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_member_user_idx").on(t.userId)],
 );
 
+/* ---------- Recommendations ---------- */
+
+// One friend telling another "you should try this". Kept after it is answered, so the same thing cannot be sent twice.
+export const recommendation = pgTable(
+  "recommendation",
+  {
+    id: id(),
+    fromUser: userRef("from_user"),
+    toUser: userRef("to_user"),
+    itemId: uuid("item_id").notNull().references(() => item.id, { onDelete: "cascade" }),
+    note: text("note"),
+    respondedAt: tz("responded_at"),
+    createdAt: tz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("recommendation_pair_item_uq").on(t.fromUser, t.toUser, t.itemId),
+    index("recommendation_to_idx").on(t.toUser, t.createdAt),
+    check("recommendation_not_self", sql`${t.fromUser} <> ${t.toUser}`),
+  ],
+);
+
 /* ---------- Nights (group plans with time votes) ---------- */
 
 export const night = pgTable(
