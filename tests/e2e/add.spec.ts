@@ -30,6 +30,21 @@ test("search across categories and add a movie", async ({ page }) => {
   expect(await db.select().from(entry).where(eq(entry.itemId, movie.id))).toHaveLength(1);
 });
 
+test("the quick Watched and Played buttons add a title as finished", async ({ page }) => {
+  await signIn(page, "Yousef");
+  await page.goto("/add");
+  await page.getByRole("searchbox", { name: "Search everything" }).fill("dune");
+
+  await page.getByRole("button", { name: "Watched: Dune (Movie)" }).click();
+  await expect(page.getByRole("link", { name: "Open Dune" }).first()).toContainText("Done");
+  await page.getByRole("button", { name: "Played: Dune: Spice Wars (Game)" }).click();
+  await expect(page.getByRole("link", { name: "Open Dune: Spice Wars" })).toContainText("Done");
+
+  const rows = await db.select({ title: item.title, status: entry.status, finishedAt: entry.finishedAt }).from(entry).innerJoin(item, eq(entry.itemId, item.id));
+  expect(rows.map((r) => r.title).sort()).toEqual(["Dune", "Dune: Spice Wars"]);
+  expect(rows.every((r) => r.status === "done" && r.finishedAt !== null)).toBe(true);
+});
+
 test("category chips narrow the search", async ({ page }) => {
   await signIn(page, "Yousef");
   await page.goto("/add");

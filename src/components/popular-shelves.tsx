@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { addToLibrary } from "@/app/actions/library";
+import { addAsDone, addToLibrary } from "@/app/actions/library";
 import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { discoverHref } from "@/lib/discover";
 import { CATEGORIES, type Category, type Status } from "@/db/schema";
-import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
+import { CATEGORY_LABEL, DONE_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import type { ItemDraft } from "@/lib/providers/types";
 
 type Response = {
@@ -72,6 +72,21 @@ export function PopularShelves({ category }: { category?: Category }) {
     });
   }
 
+  function markDone(h: ItemDraft) {
+    const k = key(h);
+    if (!h.externalId || h.source === "manual") return;
+    setPending((p) => new Set(p).add(k));
+    startTransition(async () => {
+      const res = await addAsDone({ source: h.source, externalId: h.externalId, category: h.category });
+      setPending((p) => {
+        const n = new Set(p);
+        n.delete(k);
+        return n;
+      });
+      if (res.ok) setAdded((a) => ({ ...a, [k]: { entryId: res.entryId, status: "done" } }));
+    });
+  }
+
   if (loading && !data) return <p className="hint">Loading popular titles…</p>;
   if (!data || data.hits.length === 0) {
     return <p className="hint">Type a title to search — movies, series, anime, manga, books and games together.</p>;
@@ -125,6 +140,17 @@ export function PopularShelves({ category }: { category?: Category }) {
                       aria-label={`Add ${h.title} (${CATEGORY_LABEL[h.category]})`}
                     >
                       <Icon name="plus" small /> {pending.has(k) ? "Adding" : "Add"}
+                    </button>
+                  )}
+                  {existing?.status !== "done" && (
+                    <button
+                      className="ch-btn ch-btn--pill ch-btn--ghost ch-btn--block"
+                      style={{ justifyContent: "center" }}
+                      onClick={() => markDone(h)}
+                      disabled={pending.has(k)}
+                      aria-label={`${DONE_LABEL[h.category]}: ${h.title} (${CATEGORY_LABEL[h.category]})`}
+                    >
+                      <Icon name="check" small /> {DONE_LABEL[h.category]}
                     </button>
                   )}
                 </div>

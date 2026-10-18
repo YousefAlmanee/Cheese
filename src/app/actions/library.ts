@@ -31,6 +31,22 @@ export async function addToLibrary(input: unknown): Promise<AddResult> {
   }
 }
 
+/** The quick "Watched / Read / Played" button in search: adds the title if needed and marks it finished, without leaving the page. */
+export async function addAsDone(input: unknown): Promise<AddResult> {
+  const { user } = await requireUser();
+  const ref = refSchema.safeParse(input);
+  if (!ref.success) return { ok: false, error: "That item could not be read." };
+  try {
+    const { entryId } = await addFromRef(user.id, ref.data);
+    await changeStatus(user.id, entryId, "done");
+    revalidatePath("/library");
+    revalidatePath("/");
+    return { ok: true, entryId };
+  } catch {
+    return { ok: false, error: "Could not reach the source for that item. Try again in a moment." };
+  }
+}
+
 /** Adds a title from its details page and sets where it stands in one go: "want", "in progress" or "done". */
 export async function addWithStatus(input: unknown, status: string): Promise<{ ok: false; error: string }> {
   const { user } = await requireUser();
