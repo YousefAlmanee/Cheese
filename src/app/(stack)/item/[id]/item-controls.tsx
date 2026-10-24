@@ -162,10 +162,10 @@ export function ItemControls({ initial }: { initial: ItemState }) {
           )}
           <div className="ch-setting divider">
             <div>
-              <p className="ch-setting__label">Hide from friends</p>
-              <p className="ch-setting__hint">Only you can see this one</p>
+              <p className="ch-setting__label">Show to friends</p>
+              <p className="ch-setting__hint">{s.hidden ? "Only you can see this one" : "Friends can see it and recommendations can find it"}</p>
             </div>
-            <button className="ch-switch" role="switch" aria-checked={s.hidden} aria-label="Hide from friends" onClick={() => save({ hidden: !s.hidden }, { hidden: !s.hidden })} />
+            <button className="ch-switch" role="switch" aria-checked={!s.hidden} aria-label="Show to friends" onClick={() => save({ hidden: !s.hidden }, { hidden: !s.hidden })} />
           </div>
           <div className="divider" style={{ padding: "14px 0 16px" }}>
             <p className="ch-row-title" style={{ marginBottom: 10 }}>Priority</p>
