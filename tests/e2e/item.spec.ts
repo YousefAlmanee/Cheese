@@ -55,13 +55,13 @@ test("log episodes, finish the show, rate it with half stars", async ({ page }) 
   await expect.poll(async () => (await ownEntry("Frieren: Beyond Journey's End")).review).toBe("Quietly wonderful.");
 });
 
-test("settings: together, hide from friends, priority", async ({ page }) => {
+test("settings: together, show to friends, priority", async ({ page }) => {
   await signIn(page, "Yousef");
   await addFromSearch(page, "interstellar", "Add Interstellar (Movie)");
   await page.getByRole("link", { name: /^Open Interstellar/ }).click();
 
   await page.getByRole("switch", { name: "Together" }).click();
-  await page.getByRole("switch", { name: "Hide from friends" }).click();
+  await page.getByRole("switch", { name: "Show to friends" }).click();
   await page.getByRole("button", { name: "Must do" }).click();
   await expect
     .poll(async () => {

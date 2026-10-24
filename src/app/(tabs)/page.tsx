@@ -4,10 +4,10 @@ import { Cover } from "@/components/cover";
 import { Icon } from "@/components/icons";
 import { LogButton } from "@/components/log-button";
 import { NotificationBell } from "@/components/notification-bell";
-import { PopularShelves } from "@/components/popular-shelves";
 import { CATEGORIES, type Category } from "@/db/schema";
 import { CATEGORY_LABEL, CATEGORY_PLURAL } from "@/lib/length";
 import { loadHome } from "@/lib/home";
+import { loadFriendShelves } from "@/lib/home-friends";
 import { unreadCount } from "@/lib/notifications";
 import { percent, shortProgress } from "@/lib/progress";
 import { loadStreak, streakLine } from "@/lib/streak";
@@ -21,10 +21,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const { user, profile } = await requireUser();
   const sp = await searchParams;
   const category = CATEGORIES.includes(sp.category as Category) ? (sp.category as Category) : undefined;
-  const [home, unread, streak] = await Promise.all([
+  const [home, unread, streak, friends] = await Promise.all([
     loadHome(user.id, profile.timezone, profile.weeklyGoalMinutes, category),
     unreadCount(user.id),
     loadStreak(user.id, profile.timezone),
+    loadFriendShelves(user.id, category),
   ]);
   const { spotlight: spot, more } = home;
   const tab = (c: Category | undefined) => (c ? `/?category=${c}` : "/");
@@ -146,11 +147,42 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      {/* Always shown, and kept apart from the person's own list: these are suggestions, not things they added. */}
-      <section className="sec popular">
-        <p className="ch-overline">Popular right now</p>
-        <p className="hint">Suggestions for you to browse. They only join your list when you tap Add.</p>
-        <PopularShelves category={category} />
+      <section className="sec friend-shelves">
+        <p className="ch-overline">In common with friends</p>
+        {friends.friendCount === 0 ? (
+          <div className="empty">
+            <p>Add friends to see what you both have on your lists.</p>
+            <Link className="ch-btn ch-btn--primary" href="/friends/add">
+              Add a friend
+            </Link>
+          </div>
+        ) : friends.shelves.length === 0 ? (
+          <p className="hint">
+            {category
+              ? `You and your friends have no ${CATEGORY_PLURAL[category].toLowerCase()} in common yet.`
+              : "You and your friends have nothing in common yet."}{" "}
+            When you and a friend add the same title, it shows up here. Items you hide from friends are never shown.
+          </p>
+        ) : (
+          friends.shelves.map(({ friend, items }) => (
+            <section className="sec" key={friend.userId} aria-label={`In common with ${friend.displayName}`}>
+              <Link href={`/friends/u/${friend.username}`} className="ch-overline" style={{ color: "inherit", textDecoration: "none" }}>
+                With {friend.displayName} · {items.length}
+              </Link>
+              <div className="ch-tile-row">
+                {items.map((c) => (
+                  <Link key={c.entryId} href={`/item/${c.entryId}`} className="ch-tile" style={{ textDecoration: "none", color: "inherit" }}>
+                    <Cover src={c.coverUrl} title={c.title} />
+                    <div>
+                      <div className="ch-tile__title">{c.title}</div>
+                      <div className="ch-tile__meta">{CATEGORY_LABEL[c.category]}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))
+        )}
       </section>
     </>
   );

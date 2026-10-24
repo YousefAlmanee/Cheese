@@ -45,7 +45,7 @@ export default async function RecommendPage({ params }: { params: Promise<{ id: 
       <section>
         {e.hidden ? (
           <div className="empty">
-            <p>This is hidden from friends, so it cannot be recommended. Turn off &quot;Hide from friends&quot; first.</p>
+            <p>This is hidden from friends, so it cannot be recommended. Turn on &quot;Show to friends&quot; first.</p>
             <Link className="ch-btn ch-btn--ghost" href={`/item/${e.id}`}>
               Back to the item
             </Link>
