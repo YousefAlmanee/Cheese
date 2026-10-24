@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { startEntry } from "@/app/actions/entry";
 import { Cover } from "@/components/cover";
+import { FriendShelfSection } from "@/components/friend-shelf";
 import { Icon } from "@/components/icons";
 import { LogButton } from "@/components/log-button";
 import { NotificationBell } from "@/components/notification-bell";
@@ -161,26 +162,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {category
               ? `You and your friends have no ${CATEGORY_PLURAL[category].toLowerCase()} in common yet.`
               : "You and your friends have nothing in common yet."}{" "}
-            When you and a friend add the same title, it shows up here. Items you hide from friends are never shown.
+            When you and a friend both have the same title on your lists and neither of you has finished it, it shows up here. Items you hide from friends are never shown.
           </p>
         ) : (
           friends.shelves.map(({ friend, items }) => (
-            <section className="sec" key={friend.userId} aria-label={`In common with ${friend.displayName}`}>
-              <Link href={`/friends/u/${friend.username}`} className="ch-overline" style={{ color: "inherit", textDecoration: "none" }}>
-                With {friend.displayName} · {items.length}
-              </Link>
-              <div className="ch-tile-row">
-                {items.map((c) => (
-                  <Link key={c.entryId} href={`/item/${c.entryId}`} className="ch-tile" style={{ textDecoration: "none", color: "inherit" }}>
-                    <Cover src={c.coverUrl} title={c.title} />
-                    <div>
-                      <div className="ch-tile__title">{c.title}</div>
-                      <div className="ch-tile__meta">{CATEGORY_LABEL[c.category]}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
+            <FriendShelfSection key={friend.userId} friend={friend} items={items} />
           ))
         )}
       </section>

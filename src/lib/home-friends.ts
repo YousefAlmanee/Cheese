@@ -1,8 +1,10 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { entry, item, type Category, type Status } from "@/db/schema";
 import { listFriends, type Person } from "./friends";
+
+const FINISHED: Status[] = ["done", "dropped"];
 
 export type SharedItem = {
   /** The viewer's own entry, so a tap opens their copy of the item. */
@@ -23,8 +25,9 @@ export type FriendShelves = {
 };
 
 /**
- * One shelf per friend: the items both people have in their library. Anything either side
- * has marked "show to friends" off is left out, so a hidden entry never surfaces here.
+ * One shelf per friend: the items both people have in their library and neither has finished
+ * or dropped, so each one is something the two of you could still do together. Anything either
+ * side has marked "show to friends" off is left out, so a hidden entry never surfaces here.
  */
 export async function loadFriendShelves(userId: string, category?: Category): Promise<FriendShelves> {
   const friends = await listFriends(userId);
@@ -48,6 +51,8 @@ export async function loadFriendShelves(userId: string, category?: Category): Pr
       and(
         eq(entry.userId, userId),
         eq(entry.hidden, false),
+        notInArray(entry.status, FINISHED),
+        notInArray(theirs.status, FINISHED),
         inArray(theirs.userId, friends.map((f) => f.userId)),
         eq(theirs.hidden, false),
         category ? eq(item.category, category) : undefined,
