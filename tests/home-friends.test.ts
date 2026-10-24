@@ -68,4 +68,23 @@ describe("loadFriendShelves", () => {
     const mineHidden = await loadFriendShelves(me.id);
     expect(mineHidden.shelves.map((s) => s.friend.userId)).toEqual([sara.id]);
   });
+
+  it("leaves out anything either person has finished or dropped", async () => {
+    const me = await makeUser("Yousef");
+    const sara = await makeUser("Sara");
+    await befriend(me, sara);
+    const open = await upsertItem(draft("Open", "movie", "m/1"));
+    const mineDone = await upsertItem(draft("Mine done", "movie", "m/2"));
+    const theirsDone = await upsertItem(draft("Theirs done", "movie", "m/3"));
+    const dropped = await upsertItem(draft("Dropped", "movie", "m/4"));
+    for (const it of [open, mineDone, theirsDone, dropped]) for (const u of [me, sara]) await addEntry(u.id, it.id);
+    const setStatus = (u: { id: string }, itemId: string, status: "done" | "dropped") =>
+      db.update(entry).set({ status }).where(and(eq(entry.userId, u.id), eq(entry.itemId, itemId)));
+    await setStatus(me, mineDone.id, "done");
+    await setStatus(sara, theirsDone.id, "done");
+    await setStatus(sara, dropped.id, "dropped");
+
+    const { shelves } = await loadFriendShelves(me.id);
+    expect(shelves.map((s) => s.items.map((i) => i.title))).toEqual([["Open"]]);
+  });
 });
